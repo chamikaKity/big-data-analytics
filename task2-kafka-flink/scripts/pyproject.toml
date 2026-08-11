@@ -1,0 +1,8 @@
+[project]
+name = "traffic-producer"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.12"
+dependencies = [
+    "confluent-kafka>=2.15.0",
+]
