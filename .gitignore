@@ -1,0 +1,27 @@
+# Local-only context, not for the public repo
+CLAUDE.md
+Coventry_Big_Data_Analytics_Coursework copy_New.pdf
+
+# OS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.python-version
+
+# Datasets (large, download via scripts instead of committing)
+*.csv
+*.txt
+!requirements.txt
+data/
+
+# Docker / infra volumes
+**/influxdb-data/
+**/neo4j-data/
+**/spark-data/
+
+# Editors
+.vscode/
+.idea/
