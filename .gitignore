@@ -1,6 +1,10 @@
 # Local-only context, not for the public repo
 Coventry_Big_Data_Analytics_Coursework copy_New.pdf
 
+# Secrets
+.env
+!.env.example
+
 # OS
 .DS_Store
 
