@@ -12,6 +12,15 @@ of real hourly observations for Fairbanks (64.8378, -147.716) from the
 [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) (free, no
 API key). Saved at `data/fairbanks_climate.csv` (~87.7k rows, gitignored).
 
+Exact request used to fetch the data:
+```
+https://archive-api.open-meteo.com/v1/archive?latitude=64.8378&longitude=-147.716&start_date=2015-01-01&end_date=2024-12-31&hourly=temperature_2m,precipitation&timezone=UTC&format=csv
+```
+
+Underlying source: ERA5 reanalysis (ECMWF / Copernicus Climate Change Service), licensed CC BY 4.0.
+Citation: Zippenfenig, P. (2023). *Open-Meteo.com Weather API* [Data set]. Open-Meteo.
+https://doi.org/10.5281/zenodo.7970649
+
 **Status:** Step 1.1 done (InfluxDB running in Docker). Step 1.2 done — `scripts/ingest.py` (uv,
 `influxdb-client`) parses `data/fairbanks_climate.csv`, preserves original hourly UTC timestamps, and
 writes to the `fairbanks_climate` bucket in batches of 5000. Verified: 87,672 points ingested,
