@@ -26,3 +26,17 @@ https://doi.org/10.5281/zenodo.7970649
 writes to the `fairbanks_climate` bucket in batches of 5000. Verified: 87,672 points ingested,
 queried back via Flux and confirmed values/timestamps match source CSV exactly. Next: Step 1.3
 (Flux queries — hourly window aggregation, anomaly detection, downsampling task).
+
+### Line Protocol
+
+The ingest script builds each point with the official client's `Point()` builder (schema: measurement
+`climate`, tag `station=fairbanks`, fields `temperature_c`/`precipitation_mm`, second-precision
+timestamp), which the client serializes into InfluxDB Line Protocol before writing. For CSV row
+`2015-01-01T00:00,-1.8,0.00`, the resulting Line Protocol is:
+
+```
+climate,station=fairbanks temperature_c=-1.8,precipitation_mm=0.00 1420070400
+```
+
+`1420070400` is the Unix epoch (seconds) for `2015-01-01T00:00:00Z` — the record's own historical
+timestamp, not the time the script was run.
