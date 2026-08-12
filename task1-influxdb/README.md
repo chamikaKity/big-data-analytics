@@ -7,14 +7,16 @@ downsampling with a 30-day retention policy.
 **Dataset:** The link in the assignment brief (`snap.uaf.edu/tools/community-charts/data/fairbanks_climate.csv`)
 no longer serves raw data — it now redirects to a single-page app, and the underlying SNAP database
 turned out to be decadal climate *projections* (20-26 summary rows, no per-timestamp readings), which
-can't support hourly aggregation/anomaly/downsampling queries. Substituted with 10 years (2015-2024)
-of real hourly observations for Fairbanks (64.8378, -147.716) from the
+can't support hourly aggregation/anomaly/downsampling queries. Substituted with real hourly
+observations for Fairbanks (64.8378, -147.716) from the
 [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) (free, no
-API key). Saved at `data/fairbanks_climate.csv` (~87.7k rows, gitignored).
+API key), from **2015-01-01 through the current date** (kept refreshed through today so the dataset
+has genuinely recent data too — see Step 1.3 downsampling notes below for why that matters). Saved at
+`data/fairbanks_climate.csv` (~101.8k rows as of 2026-08-12, gitignored).
 
-Exact request used to fetch the data:
+Request used to fetch the data (re-run with an updated `end_date` to keep it current):
 ```
-https://archive-api.open-meteo.com/v1/archive?latitude=64.8378&longitude=-147.716&start_date=2015-01-01&end_date=2024-12-31&hourly=temperature_2m,precipitation&timezone=UTC&format=csv
+https://archive-api.open-meteo.com/v1/archive?latitude=64.8378&longitude=-147.716&start_date=2015-01-01&end_date=2026-08-12&hourly=temperature_2m,precipitation&timezone=UTC&format=csv
 ```
 
 Underlying source: ERA5 reanalysis (ECMWF / Copernicus Climate Change Service), licensed CC BY 4.0.
@@ -46,8 +48,8 @@ values equal the raw readings — the transformation is correct, just not visual
 granularity (verified against raw data).
 
 **2. Anomaly isolation** (`queries/2_anomaly_detection.flux`): flags readings >2 standard deviations
-from the dataset mean. Computed over the full 2015-2024 span: mean ≈ -0.36°C, stddev ≈ 14.42,
-thresholds ≈ [-29.20°C, 28.48°C]. Result: **2,253 of 87,672 readings (~2.6%)** flagged. Most extreme:
+from the dataset mean. Computed over the full 2015-2026 span: mean ≈ -0.47°C, stddev ≈ 14.72,
+thresholds ≈ [-29.90°C, 28.96°C]. Result: **2,878 of 101,808 readings (~2.8%)** flagged. Most extreme:
 **-46.8°C on 2017-01-19** — a real, documented Fairbanks cold snap, confirming the anomalies are
 genuine extremes, not noise.
 
@@ -60,28 +62,27 @@ docker exec task1-influxdb influx bucket create --name fairbanks_climate_downsam
 ```
 Task registered via the Tasks API (`POST /api/v2/tasks`) — id `11296bf289d2a000`, status `active`.
 
-**Important finding, worth knowing for the viva:** InfluxDB retention is relative to the *current*
-clock, not to when data is written. A 30-day-retention bucket only keeps points timestamped within
-the last 30 days of *now* — writing our 2015-2024 backfill into it gets silently dropped almost
-immediately, since every point is over a decade "expired" relative to today. Verified directly: a
-test point written with today's timestamp persisted correctly; the full historical backfill did not.
-This also means the live scheduled task (which looks back 1 day from *now* in the source bucket each
-run) finds nothing to summarize, since the historical source data doesn't extend to the present.
+**Key finding, worth knowing for the viva:** InfluxDB retention is relative to the *current* clock,
+not to when data is written. A 30-day-retention bucket only keeps points timestamped within the last
+30 days of *now* — writing old historical backfill into it gets silently dropped almost immediately,
+since it's already "expired" relative to today. Verified directly: a test point written with today's
+timestamp persisted correctly; a backfill using only the original 2015-2024 range did not.
 
-This is expected, correct InfluxDB behavior for a bucket designed to hold rolling recent summaries,
-not a bug — it just structurally conflicts with backfilling old historical data specifically. So the
-demonstration here is split into what each part actually proves:
-- Task + 30-day-retention bucket are correctly configured (shown above).
-- Retention enforcement is verified working (recent-timestamp test point persisted; decade-old
-  backfill did not).
-- The aggregation logic itself is verified correct via a read-only query (no `to()` write, so not
-  subject to retention), e.g. for Dec 2024:
+This is expected, correct InfluxDB behavior for a bucket designed to hold rolling recent summaries —
+not a bug, but it does mean a purely historical (long-past) dataset can never populate a short-retention
+bucket. **Resolution:** the source dataset is kept refreshed through the current date (see Dataset
+section above), so it always contains genuinely recent data. Re-running the same daily-aggregation
+logic (either the registered task or the equivalent one-off backfill query in
+`3_downsampling_task.flux`) against this updated source data means real, current daily averages
+correctly persist. Verified: `fairbanks_climate_downsampled` holds exactly the last 31 real days
+(everything older correctly aged out by the retention policy), e.g.:
 ```
-2024-12-02  ->  -25.36°C
-2024-12-03  ->  -24.67°C
-2024-12-04  ->  -19.18°C
-2024-12-05  ->   -7.64°C
+2026-07-14  ->  16.32°C
+2026-07-15  ->  14.51°C
+2026-07-16  ->  14.72°C
 ...
+2026-08-11  ->  17.38°C
+2026-08-12  ->  18.14°C
 ```
-Each value is the mean of 24 hourly readings for that day — correct and consistent with Fairbanks'
-real seasonal pattern.
+Each value is the mean of 24 hourly readings for that day, correctly reflecting Fairbanks' real
+mid-summer temperature range.
