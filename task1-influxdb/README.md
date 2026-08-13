@@ -86,3 +86,23 @@ correctly persist. Verified: `fairbanks_climate_downsampled` holds exactly the l
 ```
 Each value is the mean of 24 hourly readings for that day, correctly reflecting Fairbanks' real
 mid-summer temperature range.
+
+### Grafana dashboard (bonus, beyond the required steps)
+
+A Grafana instance is included in `docker-compose.yml`, fully provisioned via config files (no manual
+UI clicking) — consistent with the Docker-only constraint:
+
+- `grafana/provisioning/datasources/influxdb.yml` — auto-connects Grafana to InfluxDB (Flux query
+  language, org/token/bucket pulled from env vars via Grafana's `$__env{...}` provisioning syntax).
+- `grafana/provisioning/dashboards/dashboard.yml` — tells Grafana to auto-load dashboard JSON files.
+- `grafana/dashboards/fairbanks-climate.json` — the dashboard itself, 5 panels:
+  1. Hourly temperature (full history, `fairbanks_climate`)
+  2. Hourly precipitation (full history)
+  3. Downsampled daily average temperature (last 30 days, `fairbanks_climate_downsampled`)
+  4. Anomaly count in the current view (>2 stddev, live-recomputed)
+  5. Latest temperature reading (stat panel)
+
+Access at **http://localhost:3000** (credentials in `.env` — `GRAFANA_ADMIN_USER`/`GRAFANA_ADMIN_PASSWORD`).
+Verified end-to-end: datasource health check confirms connectivity ("datasource is working, 4 buckets
+found"), and a direct query through Grafana's API (`/api/ds/query`) against the downsampled-temperature
+panel returned the same 31 real data points as the direct InfluxDB verification above.

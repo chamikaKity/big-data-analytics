@@ -24,6 +24,7 @@ data/
 **/influxdb-data/
 **/neo4j-data/
 **/spark-data/
+**/grafana-data/
 
 # Editors
 .vscode/
