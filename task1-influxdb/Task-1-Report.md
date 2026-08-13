@@ -64,11 +64,3 @@ daily average, a live anomaly count, and the latest reading.
 **Fig 6**:
 
 ![Grafana Dashboard](figures/06_grafana_dashboard.png)
-
-## Summary
-| Step | Result |
-|---|---|
-| 1.1 Environment | InfluxDB running in Docker, persistent, auto-bootstrapped |
-| 1.2 Ingestion | 101,808 points, original timestamps verified |
-| 1.3 Queries | Hourly aggregation, anomaly detection (2,878 flagged), 30-day downsampling task — all verified |
-| Bonus | Grafana dashboard, 5 panels, live-querying InfluxDB |
