@@ -22,16 +22,16 @@ package) parses the CSV and writes each row as an InfluxDB point, using the reco
 timestamp — not the time the script ran. Verified: point count in InfluxDB matches the CSV
 row count exactly, and sample values/timestamps match the source file.
 
-**Fig 2 & 3** — the ingested hourly data queried back from InfluxDB, full 2015-2026 range,
+**Fig 1 & 2** — the ingested hourly data queried back from InfluxDB, full 2015-2026 range,
 confirming a clean seasonal pattern with no gaps:
 
-![Hourly Temperature](figures/02_influxdb_hourly_temperature.png)
-![Hourly Precipitation](figures/03_influxdb_hourly_precipitation.png)
+![Hourly Temperature](figures/01_influxdb_hourly_temperature.png)
+![Hourly Precipitation](figures/02_influxdb_hourly_precipitation.png)
 
 ## 1.3 — Flux Queries
 
 **1) Window aggregation** — `aggregateWindow(every: 1h, fn: mean)` computes sliding hourly
-averages. Shown above (Fig 2, 3) — since the source is already hourly-resolution, the output
+averages. Shown above (Fig 1, 2) — since the source is already hourly-resolution, the output
 equals the raw readings, correctly demonstrating the mechanism.
 
 **2) Anomaly detection** — flags temperature readings more than 2 standard deviations from the
@@ -39,7 +39,10 @@ dataset mean (mean ≈ -0.47°C, stddev ≈ 14.72, thresholds ≈ [-29.90°C, 28
 2,878 of 101,808 readings (~2.8%) flagged. Most extreme: **-46.8°C on 2017-01-19** — a real,
 documented Fairbanks cold snap, confirming the anomalies are genuine, not noise.
 
-![Anomaly Detection Query](figures/06_flux_anomaly_query.png)
+**Fig 3** — the Flux script and its output (note the sawtooth shape: only sparse anomaly points
+are plotted, so the line jumps between them across wide time gaps):
+
+![Anomaly Detection Query](figures/03_flux_anomaly_query.png)
 
 **3) Downsampling task** — a recurring InfluxDB Task (`downsample-daily-climate`, runs daily)
 aggregates hourly data into daily means, written to a second bucket
@@ -47,6 +50,8 @@ aggregates hourly data into daily means, written to a second bucket
 is relative to the current clock, only genuinely recent data can persist there — the source
 dataset is kept refreshed through today so this bucket always holds real, current daily
 averages, with anything older than 30 days correctly aged out automatically.
+
+**Fig 4 & 5** — the downsampled bucket, last 30 real days only:
 
 ![Downsampled Temperature](figures/04_downsampled_temperature.png)
 ![Downsampled Precipitation](figures/05_downsampled_precipitation.png)
@@ -56,7 +61,9 @@ A Grafana instance (also in `docker-compose.yml`, fully config-provisioned — n
 visualizes both buckets in one dashboard: hourly temperature/precipitation, the downsampled
 daily average, a live anomaly count, and the latest reading.
 
-![Grafana Dashboard](figures/01_grafana_dashboard.png)
+**Fig 6**:
+
+![Grafana Dashboard](figures/06_grafana_dashboard.png)
 
 ## Summary
 | Step | Result |
