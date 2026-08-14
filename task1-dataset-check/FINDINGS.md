@@ -7,7 +7,12 @@ Task 1 setup) to verify real-world suitability, not just theoretical review.
 ## In simple terms
 - Both datasets work and load into InfluxDB correctly. No technical blockers.
 - It would be simpler to use just **one** dataset for all of Task 1, instead of one dataset for
-  1.1/1.2 and a different one for 1.3. Less repeated work, one consistent story.
+  1.1/1.2 and a different one for 1.3. Two datasets means writing and running the ingestion step
+  (Step 1.2) *twice* — once per dataset, each with its own column names, its own date format, and
+  its own load into InfluxDB — instead of doing that setup once and reusing it for every query in
+  1.3. One dataset means one ingestion script, one schema to explain, and one story that flows
+  cleanly from "here's the data" through to "here are the three queries," rather than switching
+  data sources partway through the task.
 - If we do use just one, the Szeged dataset is the better pick — it covers 10 years instead of 1,
   and has more weather measurements in it.
 - But switching to one dataset does **not** solve our main problem: the last part of 1.3 needs a
