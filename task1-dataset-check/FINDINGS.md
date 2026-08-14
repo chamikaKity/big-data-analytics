@@ -1,4 +1,4 @@
-# Dataset Suitability Check — for lecturer review
+# Dataset Suitability Check
 
 Checked the two Kaggle datasets suggested as replacements for Task 1's broken SNAP link. Both
 were actually downloaded and ingested into an isolated InfluxDB instance to verify real-world
