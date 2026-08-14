@@ -1,126 +1,57 @@
 # Dataset Suitability Check — for lecturer review
 
-Testing two Kaggle datasets suggested as replacements for Task 1's original (broken) SNAP link.
-Both were actually downloaded and ingested into an isolated InfluxDB instance (not the real
-Task 1 setup) to verify real-world suitability, not just theoretical review.
+Checked the two Kaggle datasets suggested as replacements for Task 1's broken SNAP link. Both
+were actually downloaded and ingested into an isolated InfluxDB instance to verify real-world
+suitability, not just reviewed on paper.
 
-## In simple terms
-- Both datasets work and load into InfluxDB correctly. No technical blockers.
-- It would be simpler to use just **one** dataset for all of Task 1, instead of one dataset for
-  1.1/1.2 and a different one for 1.3. Two datasets means writing and running the ingestion step
-  (Step 1.2) *twice* — once per dataset, each with its own column names, its own date format, and
-  its own load into InfluxDB — instead of doing that setup once and reusing it for every query in
-  1.3. One dataset means one ingestion script, one schema to explain, and one story that flows
-  cleanly from "here's the data" through to "here are the three queries," rather than switching
-  data sources partway through the task.
-- If we do use just one, the Szeged dataset is the better pick — it covers 10 years instead of 1,
-  and has more weather measurements in it.
-- But switching to one dataset does **not** solve our main problem: the last part of 1.3 needs a
-  bucket that only keeps the last 30 days of data. Both Kaggle datasets are old, fixed files —
-  neither one has new data coming in from "today," so neither can naturally fill a "last 30 days"
-  bucket. Our original dataset could get around this because it came from a live weather API we
-  could re-download from up to today's date. These Kaggle files can't do that — they're frozen at
-  whatever date they were uploaded.
-- So this last-30-days issue isn't really about which dataset we pick — it happens with any fixed,
-  downloaded-once file. Worth asking the lecturer directly how he wants this handled.
+## What works and what doesn't
 
-### Why neither dataset can fill a 30-day-retention bucket
+- **1.1 Environment** — no dataset dependency, unaffected either way.
+- **1.2 Ingestion (Dataset A — Szeged)** — works. 96,429 / 96,453 rows ingested (24-row gap =
+  confirmed duplicate timestamps already in the source CSV, not an ingestion error).
+- **1.3, query 1 — hourly window aggregation (Dataset B — rohitgrewal)** — works.
+- **1.3, query 2 — anomaly detection (Dataset B)** — works.
+- **1.3, query 3 — downsampling task, 30-day retention (Dataset B)** — **breaks.** The task and
+  the retention-bound bucket can still be configured correctly, but the bucket can't hold real
+  persisted data, since Dataset B's newest data (2012-12-31) is ~14 years too old to ever fall
+  inside a "last 30 days from now" window.
 
-| Dataset | Time Range | Latest Date Available | Gap to Today (2026) |
+## Why the 30-day bucket breaks
+
+| Dataset | Time Range | Latest Date | Gap to Today (2026) |
 |---|---|---|---|
-| **A — Szeged Weather** | 2006-04-01 to 2016-09-09 | 2016-09-09 | ~10 years too old |
-| **B — rohitgrewal Weather Data** | 2012-01-01 to 2012-12-31 | 2012-12-31 | ~14 years too old |
+| A — Szeged Weather | 2006-04-01 to 2016-09-09 | 2016-09-09 | ~10 years too old |
+| B — rohitgrewal Weather Data | 2012-01-01 to 2012-12-31 | 2012-12-31 | ~14 years too old |
 
 A 30-day-retention bucket only keeps points timestamped within the last 30 days of *right now*.
-Since both datasets' newest data is years in the past, none of their rows fall inside that
-30-day window — so neither can populate this bucket, no matter which one we ingest.
+Both datasets are static, one-time downloads — neither has data anywhere near today, so neither
+can populate this bucket. This isn't about which dataset we pick; it happens with any fixed file.
+Using just one dataset for all of Task 1 (simpler — one ingestion script, one schema, one story)
+wouldn't fix it either: Dataset A is just as frozen as Dataset B.
 
-## Dataset A — [Szeged Weather 2006-2016](https://www.kaggle.com/datasets/budincsevity/szeged-weather) (suggested for Steps 1.1/1.2)
+## Dataset details
 
-- Genuine hourly time series, one row per hour, **2006-04-01 to 2016-09-09** (~10 years)
-- Columns: `time, summary, precipType, temperature, apparentTemperature, humidity, windSpeed,
-  windBearing, visibility, loudCover, pressure`
-- License: CC BY-NC-SA 4.0 (non-commercial — fine for coursework, requires citation)
-- **Ingestion test**: 96,453 CSV rows → 96,429 points stored in InfluxDB. The 24-point gap is
-  confirmed as 24 genuine duplicate timestamps in the source CSV (verified directly), not an
-  ingestion error — InfluxDB correctly deduplicates identical measurement+tag+timestamp writes.
-- **Verdict: Suitable.** Richer schema than the original substitute dataset (temperature,
-  humidity, wind, pressure all in one place — good material for tag/field design discussion).
+**A — [Szeged Weather](https://www.kaggle.com/datasets/budincsevity/szeged-weather)** (2006-2016,
+hourly, 96,453 rows) — `time, summary, precipType, temperature, apparentTemperature, humidity,
+windSpeed, windBearing, visibility, loudCover, pressure`. License: CC BY-NC-SA 4.0.
 
-## Dataset B — [Weather Data (rohitgrewal)](https://www.kaggle.com/datasets/rohitgrewal/weather-data) (suggested for Step 1.3)
-
-- Genuine hourly time series, one row per hour, but only **one fixed year: 2012-01-01 to
-  2012-12-31** (8,784 rows)
-- Columns: `Date/Time, Temp_C, Dew Point Temp_C, Rel Hum_%, Wind Speed_km/h, Visibility_km,
-  Press_kPa, Weather`
-- License: Open Database License (ODbL)
-- **Ingestion test**: 8,784 CSV rows → 8,784 points stored, exact match, no issues.
-- **Verdict: Works for windowing and anomaly detection (Step 1.3, parts 1-2) with no problems.**
-  For the downsampling task with 30-day retention (Step 1.3, part 3), there's a structural
-  conflict: InfluxDB retention is relative to the *current* clock, not the data's own age — a
-  30-day-retention bucket only keeps points timestamped within the last 30 days of *now*. Since
-  this dataset is a fixed 2012 snapshot with no way to fetch newer data (unlike the original
-  Open-Meteo substitute, which is a live API we could re-query through today), there is no way
-  to get genuinely current data into that bucket from this dataset alone.
-  - We hit this exact issue with the original substitute dataset too, and resolved it by
-    re-fetching through today's date (a live API). That fix isn't available here.
-  - Options if this dataset is used for 1.3: (a) accept a "task + bucket configured correctly,
-    but demonstrated via a read-only query rather than a persisted downsampled bucket" writeup,
-    or (b) time-shift a slice of 2012 data to look recent for demo purposes only, clearly
-    documented as such.
-
-## Note: switching the Step 1.3 dataset means redoing ingestion too
-Flux queries can only run against data already sitting in an InfluxDB bucket. If Dataset B gets
-swapped for something else to work around the retention conflict, that replacement also needs a
-full ingestion pass first (parse CSV, map columns to InfluxDB points, preserve original
-timestamps, write to a bucket) — functionally the same work as Step 1.2, just applied to a
-different file. There's no way to skip straight to writing 1.3 queries against an unloaded
-dataset.
-
-## Should we just use one dataset for all of Task 1?
-Using a single dataset throughout (1.1, 1.2, and 1.3) would be simpler and more coherent than
-juggling two — one ingestion pipeline, one schema, one consistent story for the viva, instead of
-double the ingestion work and two sets of column-mapping logic. If going that route, **Dataset A
-(Szeged) is the better single choice**: 10 years of data vs. Dataset B's 1 year, and a richer
-schema (temperature, humidity, wind, pressure vs. just temperature/humidity/wind/pressure at
-lower variety) gives more to work with for the anomaly and windowing queries.
-
-**Important caveat:** consolidating to one dataset does **not** by itself fix the retention/
-downsampling conflict above. Dataset A is *also* a fixed historical snapshot (2006-2016) with no
-live API behind it — the same problem that affects Dataset B. The only reason the original
-Open-Meteo substitute dataset could solve this was that it's backed by a live, re-queryable API
-we could pull fresh data from through today; neither Kaggle dataset offers that. So the retention
-question is independent of which dataset(s) get used, and is still worth raising with the
-lecturer directly regardless of the final dataset decision.
-
-## Recommendation
-Both datasets are technically ingestible and verified working. Using Dataset A alone for all of
-Task 1 would be the cleanest setup if the lecturer is open to it. If both datasets stay as
-assigned (A for 1.1/1.2, B for 1.3), Dataset B works fine for the windowing and anomaly queries
-but reproduces the same retention/historical-data conflict already documented in the current
-submission. Either way, worth asking directly whether a read-only/documented demonstration is
-acceptable for the downsampling part, since no available dataset resolves it outright.
+**B — [rohitgrewal Weather Data](https://www.kaggle.com/datasets/rohitgrewal/weather-data)**
+(2012 only, hourly, 8,784 rows) — `Date/Time, Temp_C, Dew Point Temp_C, Rel Hum_%,
+Wind Speed_km/h, Visibility_km, Press_kPa, Weather`. License: ODbL.
 
 ## Suggestion: keep the dataset already used in Task 1
 
 **Dataset:** [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api)
-— specifically, real hourly Fairbanks weather fetched via:
 ```
 https://archive-api.open-meteo.com/v1/archive?latitude=64.8378&longitude=-147.716&start_date=2015-01-01&end_date=2026-08-12&hourly=temperature_2m,precipitation&timezone=UTC&format=csv
 ```
 
-**Reasons:**
-1. **It's the only option of the three that can actually satisfy the 30-day retention
-   requirement.** Open-Meteo is a live, re-queryable API — the request above can be re-run with
-   today's date at any time to pull genuinely current data. Both Kaggle datasets are static files
-   frozen years in the past (see table above) and can never populate a "last 30 days" bucket, no
-   matter how they're used.
-2. **Already fully built, verified, and documented.** Environment setup, ingestion (101,808
-   points, timestamps verified), all three Flux queries (including the 30-day retention task
-   demonstrated with real persisted data, not a workaround), a Grafana dashboard, and a written
-   report with screenshots are all complete and working end-to-end.
-3. **Switching now means redoing completed work for a technically weaker result** — a Kaggle
-   dataset would still need the retention conflict caveated or worked around, whereas the current
-   solution demonstrates it properly.
-4. **Real, legitimate, citable data** — backed by ERA5 reanalysis (ECMWF / Copernicus Climate
-   Change Service), CC BY 4.0 licensed, with a proper citation already in the Task 1 report.
+- **Only option that fully satisfies the 30-day retention requirement** — it's a live API,
+  re-queryable through today's date, unlike either static Kaggle file.
+- **Already built, verified, and documented** — ingestion (101,808 points), all three Flux
+  queries (retention task demonstrated with real persisted data), Grafana dashboard, written
+  report with screenshots.
+- **Switching now = redoing complete work for a weaker result** — a Kaggle dataset would still
+  need the retention conflict caveated or worked around.
+- **Legitimate, citable source** — ERA5 reanalysis (ECMWF/Copernicus), CC BY 4.0, already cited
+  in the Task 1 report.
