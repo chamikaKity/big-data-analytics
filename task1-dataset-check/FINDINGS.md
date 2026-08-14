@@ -124,6 +124,3 @@ https://archive-api.open-meteo.com/v1/archive?latitude=64.8378&longitude=-147.71
    solution demonstrates it properly.
 4. **Real, legitimate, citable data** — backed by ERA5 reanalysis (ECMWF / Copernicus Climate
    Change Service), CC BY 4.0 licensed, with a proper citation already in the Task 1 report.
-
-**What to ask the lecturer:** whether it's acceptable to keep this dataset, given it resolves a
-structural limitation that neither of his suggested Kaggle alternatives can.
