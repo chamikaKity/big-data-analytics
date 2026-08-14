@@ -11,9 +11,33 @@ import sys
 import time
 from pathlib import Path
 
-from confluent_kafka import Producer
+from confluent_kafka import KafkaException, Producer
+from confluent_kafka.admin import AdminClient, NewTopic
 
 DEFAULT_CSV = Path(__file__).resolve().parent.parent / "data" / "camera_traffic_counts.csv"
+TOPIC_PARTITIONS = 3
+TOPIC_REPLICATION_FACTOR = 1
+
+
+def ensure_topic(bootstrap_servers: str, topic: str) -> None:
+    """Create the topic with the required partition count if it doesn't exist yet.
+
+    Kafka's auto.create.topics.enable defaults to true, which would otherwise
+    silently create the topic with 1 partition on first produce() instead of
+    the 3 required by the spec.
+    """
+    admin = AdminClient({"bootstrap.servers": bootstrap_servers})
+    if topic in admin.list_topics(timeout=10).topics:
+        return
+    new_topic = NewTopic(topic, num_partitions=TOPIC_PARTITIONS, replication_factor=TOPIC_REPLICATION_FACTOR)
+    futures = admin.create_topics([new_topic])
+    for created_topic, future in futures.items():
+        try:
+            future.result()
+            print(f"created topic '{created_topic}' ({TOPIC_PARTITIONS} partitions, RF {TOPIC_REPLICATION_FACTOR})")
+        except KafkaException as e:
+            if "already exists" not in str(e):
+                raise
 
 
 def build_payload(row: dict) -> dict:
@@ -51,6 +75,7 @@ def main():
     if args.limit:
         rows = rows[: args.limit]
 
+    ensure_topic(args.bootstrap_servers, args.topic)
     producer = Producer({"bootstrap.servers": args.bootstrap_servers})
 
     print(f"streaming {len(rows)} rows to '{args.topic}' every {args.interval_seconds}s")
