@@ -4,6 +4,21 @@ Testing two Kaggle datasets suggested as replacements for Task 1's original (bro
 Both were actually downloaded and ingested into an isolated InfluxDB instance (not the real
 Task 1 setup) to verify real-world suitability, not just theoretical review.
 
+## In simple terms
+- Both datasets work and load into InfluxDB correctly. No technical blockers.
+- It would be simpler to use just **one** dataset for all of Task 1, instead of one dataset for
+  1.1/1.2 and a different one for 1.3. Less repeated work, one consistent story.
+- If we do use just one, the Szeged dataset is the better pick — it covers 10 years instead of 1,
+  and has more weather measurements in it.
+- But switching to one dataset does **not** solve our main problem: the last part of 1.3 needs a
+  bucket that only keeps the last 30 days of data. Both Kaggle datasets are old, fixed files —
+  neither one has new data coming in from "today," so neither can naturally fill a "last 30 days"
+  bucket. Our original dataset could get around this because it came from a live weather API we
+  could re-download from up to today's date. These Kaggle files can't do that — they're frozen at
+  whatever date they were uploaded.
+- So this last-30-days issue isn't really about which dataset we pick — it happens with any fixed,
+  downloaded-once file. Worth asking the lecturer directly how he wants this handled.
+
 ## Dataset A — [Szeged Weather 2006-2016](https://www.kaggle.com/datasets/budincsevity/szeged-weather) (suggested for Steps 1.1/1.2)
 
 - Genuine hourly time series, one row per hour, **2006-04-01 to 2016-09-09** (~10 years)
