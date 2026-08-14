@@ -100,3 +100,30 @@ assigned (A for 1.1/1.2, B for 1.3), Dataset B works fine for the windowing and 
 but reproduces the same retention/historical-data conflict already documented in the current
 submission. Either way, worth asking directly whether a read-only/documented demonstration is
 acceptable for the downsampling part, since no available dataset resolves it outright.
+
+## Suggestion: keep the dataset already used in Task 1
+
+**Dataset:** [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api)
+— specifically, real hourly Fairbanks weather fetched via:
+```
+https://archive-api.open-meteo.com/v1/archive?latitude=64.8378&longitude=-147.716&start_date=2015-01-01&end_date=2026-08-12&hourly=temperature_2m,precipitation&timezone=UTC&format=csv
+```
+
+**Reasons:**
+1. **It's the only option of the three that can actually satisfy the 30-day retention
+   requirement.** Open-Meteo is a live, re-queryable API — the request above can be re-run with
+   today's date at any time to pull genuinely current data. Both Kaggle datasets are static files
+   frozen years in the past (see table above) and can never populate a "last 30 days" bucket, no
+   matter how they're used.
+2. **Already fully built, verified, and documented.** Environment setup, ingestion (101,808
+   points, timestamps verified), all three Flux queries (including the 30-day retention task
+   demonstrated with real persisted data, not a workaround), a Grafana dashboard, and a written
+   report with screenshots are all complete and working end-to-end.
+3. **Switching now means redoing completed work for a technically weaker result** — a Kaggle
+   dataset would still need the retention conflict caveated or worked around, whereas the current
+   solution demonstrates it properly.
+4. **Real, legitimate, citable data** — backed by ERA5 reanalysis (ECMWF / Copernicus Climate
+   Change Service), CC BY 4.0 licensed, with a proper citation already in the Task 1 report.
+
+**What to ask the lecturer:** whether it's acceptable to keep this dataset, given it resolves a
+structural limitation that neither of his suggested Kaggle alternatives can.
