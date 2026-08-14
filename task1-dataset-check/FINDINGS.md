@@ -38,9 +38,34 @@ Task 1 setup) to verify real-world suitability, not just theoretical review.
     or (b) time-shift a slice of 2012 data to look recent for demo purposes only, clearly
     documented as such.
 
+## Note: switching the Step 1.3 dataset means redoing ingestion too
+Flux queries can only run against data already sitting in an InfluxDB bucket. If Dataset B gets
+swapped for something else to work around the retention conflict, that replacement also needs a
+full ingestion pass first (parse CSV, map columns to InfluxDB points, preserve original
+timestamps, write to a bucket) — functionally the same work as Step 1.2, just applied to a
+different file. There's no way to skip straight to writing 1.3 queries against an unloaded
+dataset.
+
+## Should we just use one dataset for all of Task 1?
+Using a single dataset throughout (1.1, 1.2, and 1.3) would be simpler and more coherent than
+juggling two — one ingestion pipeline, one schema, one consistent story for the viva, instead of
+double the ingestion work and two sets of column-mapping logic. If going that route, **Dataset A
+(Szeged) is the better single choice**: 10 years of data vs. Dataset B's 1 year, and a richer
+schema (temperature, humidity, wind, pressure vs. just temperature/humidity/wind/pressure at
+lower variety) gives more to work with for the anomaly and windowing queries.
+
+**Important caveat:** consolidating to one dataset does **not** by itself fix the retention/
+downsampling conflict above. Dataset A is *also* a fixed historical snapshot (2006-2016) with no
+live API behind it — the same problem that affects Dataset B. The only reason the original
+Open-Meteo substitute dataset could solve this was that it's backed by a live, re-queryable API
+we could pull fresh data from through today; neither Kaggle dataset offers that. So the retention
+question is independent of which dataset(s) get used, and is still worth raising with the
+lecturer directly regardless of the final dataset decision.
+
 ## Recommendation
-Both datasets are technically ingestible and verified working. Dataset A is a clean drop-in
-replacement. Dataset B works for two of the three Step 1.3 queries but reproduces the same
-retention/historical-data conflict already documented in the current submission — worth asking
-directly whether a read-only/documented demonstration is acceptable for the downsampling part if
-this dataset is required.
+Both datasets are technically ingestible and verified working. Using Dataset A alone for all of
+Task 1 would be the cleanest setup if the lecturer is open to it. If both datasets stay as
+assigned (A for 1.1/1.2, B for 1.3), Dataset B works fine for the windowing and anomaly queries
+but reproduces the same retention/historical-data conflict already documented in the current
+submission. Either way, worth asking directly whether a read-only/documented demonstration is
+acceptable for the downsampling part, since no available dataset resolves it outright.
