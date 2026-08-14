@@ -19,6 +19,17 @@ Task 1 setup) to verify real-world suitability, not just theoretical review.
 - So this last-30-days issue isn't really about which dataset we pick — it happens with any fixed,
   downloaded-once file. Worth asking the lecturer directly how he wants this handled.
 
+### Why neither dataset can fill a 30-day-retention bucket
+
+| Dataset | Time Range | Latest Date Available | Gap to Today (2026) |
+|---|---|---|---|
+| **A — Szeged Weather** | 2006-04-01 to 2016-09-09 | 2016-09-09 | ~10 years too old |
+| **B — rohitgrewal Weather Data** | 2012-01-01 to 2012-12-31 | 2012-12-31 | ~14 years too old |
+
+A 30-day-retention bucket only keeps points timestamped within the last 30 days of *right now*.
+Since both datasets' newest data is years in the past, none of their rows fall inside that
+30-day window — so neither can populate this bucket, no matter which one we ingest.
+
 ## Dataset A — [Szeged Weather 2006-2016](https://www.kaggle.com/datasets/budincsevity/szeged-weather) (suggested for Steps 1.1/1.2)
 
 - Genuine hourly time series, one row per hour, **2006-04-01 to 2016-09-09** (~10 years)
