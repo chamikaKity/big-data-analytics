@@ -17,4 +17,40 @@ of the Austin Camera Traffic Counts Socrata dataset (`data.austintexas.gov/resou
 fetched via `$order=read_date DESC&$limit=5000` into `data/camera_traffic_counts.csv` (gitignored,
 ~951KB, 7 sensors, 2024-07-08 12:30–23:45). `scripts/producer.py` (uv project, `confluent-kafka`)
 sorts rows by `read_date` ascending, publishes one JSON message every 2s keyed by `atd_device_id`.
-Verified via console consumer that messages land correctly. Next: 2.3 (PyFlink windowed job).
+Verified via console consumer that messages land correctly.
+
+2.3 done — `jobs/traffic_windowed_totals.py`, submitted via `flink run -d -py` (Flink CLI, inside
+the jobmanager container, satisfying "deploy via Flink dashboard/CLI"). Reads `traffic-telemetry`
+via `KafkaSource`, uses `WatermarkStrategy.for_bounded_out_of_orderness(10s)` with the timestamp
+assigner parsing each row's `read_date` field as event time, keys by `atd_device_id`, aggregates
+with a 10-minute `TumblingEventTimeWindows` + `reduce` summing `volume`, prints
+`sensor=<id> window_total_volume=<n>` per window.
+
+The stock `flink:1.19.1-scala_2.12-java11` image has no Python/PyFlink/Kafka connector, so
+`flink-python/Dockerfile` extends it: installs Python3 + a full JDK (pemja, PyFlink's JNI bridge,
+needs `jni.h`/`Python.h` headers to compile, which the base image's JRE-only `/opt/java/openjdk`
+lacks) + gcc, `pip install apache-flink==1.19.2`, and downloads
+`flink-sql-connector-kafka-3.3.0-1.19.jar` into `/opt/flink/lib/`. `docker-compose.yml`'s
+jobmanager/taskmanager now `build: ./flink-python` instead of pulling the stock image, with
+`./jobs` mounted into both containers at `/opt/flink/jobs`.
+
+**Watermark-idleness gotcha, worth knowing for the viva:** with 7 sensor IDs hashed across 3
+Kafka partitions, one partition ended up receiving zero messages. Flink combines watermarks
+across all partitions by taking the *minimum*, so that one empty partition permanently stalled
+the watermark for the whole job — `numRecordsIn` on the window operator was healthy but
+`numRecordsOut` stayed at 0 forever, no window ever fired. Fixed by adding
+`.with_idleness(Duration.of_seconds(20))` to the watermark strategy, which excludes partitions
+with no data for 20s from the watermark computation. Verified after the fix — streaming a burst
+of rows spanning several `read_date` bins produced real window output:
+```
+sensor=6653 window_total_volume=81
+sensor=6882 window_total_volume=350
+sensor=6881 window_total_volume=7
+sensor=6653 window_total_volume=836
+sensor=7343 window_total_volume=564
+sensor=7038 window_total_volume=788
+sensor=6382 window_total_volume=470
+sensor=6653 window_total_volume=307
+```
+(visible via `docker logs taskmanager`; job also shows `RUNNING` with 4 tasks on the Flink
+dashboard at localhost:8081).

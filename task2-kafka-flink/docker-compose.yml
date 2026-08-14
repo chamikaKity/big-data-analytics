@@ -27,7 +27,7 @@ services:
       retries: 10
 
   jobmanager:
-    image: flink:1.19.1-scala_2.12-java11
+    build: ./flink-python
     container_name: jobmanager
     command: jobmanager
     ports:
@@ -36,11 +36,13 @@ services:
       - |
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
+    volumes:
+      - ./jobs:/opt/flink/jobs
     networks:
       - bigdata-net
 
   taskmanager:
-    image: flink:1.19.1-scala_2.12-java11
+    build: ./flink-python
     container_name: taskmanager
     command: taskmanager
     depends_on:
@@ -50,6 +52,8 @@ services:
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
         taskmanager.numberOfTaskSlots: 2
+    volumes:
+      - ./jobs:/opt/flink/jobs
     networks:
       - bigdata-net
 
