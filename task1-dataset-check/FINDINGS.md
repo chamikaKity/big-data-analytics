@@ -15,6 +15,10 @@ suitability, not just reviewed on paper.
   the retention-bound bucket can still be configured correctly, but the bucket can't hold real
   persisted data, since Dataset B's newest data (2012-12-31) is ~14 years too old to ever fall
   inside a "last 30 days from now" window.
+- **Using two datasets means repeating 1.2** — Flux queries only run on data already in
+  InfluxDB, so Dataset B needs its own ingestion pass too (own columns, own date format, own
+  load) before any 1.3 query can run on it. That's Step 1.2's work done twice, with two schemas
+  to document instead of one.
 
 ## Why the 30-day bucket breaks
 
