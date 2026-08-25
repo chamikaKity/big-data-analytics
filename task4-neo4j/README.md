@@ -6,4 +6,6 @@ Cypher queries for neighbor lookup, in-degree centrality (top cited patents), an
 
 **Dataset:** https://snap.stanford.edu/data/cit-Patents.html
 
-**Status:** not started
+**Status:** 4.1 done — Neo4j Community container up via `docker-compose.yml` (ports 7474/7687,
+custom auth via `NEO4J_AUTH`), browser login verified at localhost:7474. Next: 4.2 bulk-load first
+5,000 citation edges.
