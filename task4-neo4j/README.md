@@ -12,9 +12,11 @@ Cypher queries for neighbor lookup, in-degree centrality (top cited patents), an
 auth via `NEO4J_AUTH`), browser login verified at localhost:7474.
 
 **4.2 — done.** First 5,000 edges streamed from `cit-Patents.txt.gz` (stopped early, no full 85MB
-download needed), converted to `import/cit-patents-5000.csv` (gitignored), bulk-loaded via
-`scripts/load_patents.cypher` (`LOAD CSV` + `MERGE`) into `(:Patent)-[:CITES]->(:Patent)`.
-Verified: 5,000 `CITES` relationships, 5,912 distinct `Patent` nodes.
+download needed) via `scripts/prepare_data.sh`, producing `import/cit-patents-5000.csv` (committed
+alongside the script for convenience — regenerate it any time with `./scripts/prepare_data.sh`).
+Bulk-loaded via `scripts/load_patents.cypher` (`LOAD CSV` + `MERGE`) into
+`(:Patent)-[:CITES]->(:Patent)`. Verified: 5,000 `CITES` relationships, 5,912 distinct `Patent`
+nodes.
 
 **4.3 — done.** Three queries in `scripts/queries.cypher`, output captured in
 `scripts/queries_output.log`:
