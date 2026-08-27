@@ -56,8 +56,7 @@ will still be there on the next `docker compose up -d`. `load_patents.cypher` is
 (`MERGE` + `CREATE CONSTRAINT IF NOT EXISTS`), so re-running steps 2-3 on top of existing data is
 safe and won't duplicate anything.
 
-Only wipe `data/*` if you want to prove the pipeline reproduces cleanly from an empty database
-(e.g. before a final demo/submission rehearsal):
+Only wipe `data/*` if you want to prove the pipeline reproduces cleanly from an empty database:
 
 ```bash
 docker compose down
