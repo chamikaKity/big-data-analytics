@@ -37,9 +37,9 @@ container).
 
 | | |
 |---|---|
-| API | Table API / SQL (not DataStream — [why](#gotcha-datastream-api-silently-never-fired)) |
+| API | Table API / SQL (not DataStream — [why](#datastream-api-silently-never-fired)) |
 | Watermark | `read_date - INTERVAL '10' SECOND` (bounded-out-of-orderness) |
-| Window | `TUMBLE`, 15 minutes ([not the brief's 10 — why](#gotcha-window-is-15-min-not-10)) |
+| Window | `TUMBLE`, 15 minutes ([not the brief's 10 — why](#window-is-15-min-not-10)) |
 | Aggregation | `SUM(volume)` grouped by `atd_device_id` |
 | Output | `print` connector sink → TaskManager stdout |
 
@@ -63,7 +63,7 @@ The stock Flink image is JVM-only — no Python, no PyFlink, no Kafka connector.
 `docker-compose.yml` builds from this instead of pulling the stock image; `./jobs` is mounted
 into both containers at `/opt/flink/jobs`.
 
-## Gotchas (viva notes)
+## Design Decisions & Debugging Notes
 
 #### Window is 15 min, not 10
 The brief says 10 minutes. The source data is pre-aggregated into 15-minute bins
