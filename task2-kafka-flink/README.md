@@ -15,10 +15,19 @@ shows 1 TaskManager registered with 2 slots.
 
 2.2 done — `traffic-telemetry` topic created (3 partitions, RF 1). Dataset: 5000 most recent rows
 of the Austin Camera Traffic Counts Socrata dataset (`data.austintexas.gov/resource/sh59-i6y9`),
-fetched via `$order=read_date DESC&$limit=5000` into `data/camera_traffic_counts.csv` (gitignored,
-~951KB, 7 sensors, 2024-07-08 12:30–23:45). `scripts/producer.py` (uv project, `confluent-kafka`)
+fetched via `$order=read_date DESC&$limit=5000` into `data/camera_traffic_counts.csv`
+(~951KB, 7 sensors, 2024-07-08 12:30–23:45). `scripts/producer.py` (uv project, `confluent-kafka`)
 sorts rows by `read_date` ascending, publishes one JSON message every 2s keyed by `atd_device_id`.
 Verified via console consumer that messages land correctly.
+
+**Committed to git, unlike the other tasks' datasets:** every other task's dataset is gitignored
+and re-fetched via a documented command (see Task 1's README) because the underlying source is a
+fixed historical archive - re-running the fetch reproduces the exact same data. This dataset isn't
+that: Socrata's `Camera Traffic Counts` is a live, continuously growing table, so
+`$order=read_date DESC&$limit=5000` pulls a *different* 5000 rows every time it's re-run (whatever
+is newest "now"). Re-fetching later would not reproduce this exact dataset, so
+`data/camera_traffic_counts.csv` is committed directly (see `.gitignore`'s explicit exception for
+this one file) to keep the producer's output reproducible.
 
 2.3 done — `jobs/traffic_windowed_totals.py`, submitted via `flink run -d -py` (Flink CLI, inside
 the jobmanager container, satisfying "deploy via Flink dashboard/CLI"). Uses the **Table API /

@@ -19,6 +19,11 @@ __pycache__/
 *.txt
 !requirements.txt
 data/
+# Exception: Task 2's source is a live/growing Socrata dataset, not a fixed
+# historical archive - re-running the fetch command later pulls a different
+# "most recent 5000 rows", so the actual file is committed for reproducibility.
+!task2-kafka-flink/data/
+!task2-kafka-flink/data/camera_traffic_counts.csv
 
 # Docker / infra volumes
 **/influxdb-data/
