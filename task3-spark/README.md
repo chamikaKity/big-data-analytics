@@ -7,4 +7,5 @@ stage, and shuffle metrics from the Spark UI.
 
 **Dataset:** https://snap.stanford.edu/data/web-BerkStan.html
 
-**Status:** not started
+**Status:** 3.1–3.3 done — cluster up, in-degree job written and run, results in
+`Task-3-Report.md` (screenshots pending)
