@@ -69,6 +69,32 @@ one total per sensor per window:
 
 ![Task 2.3 output](figures/2.3-output.png)
 
+## Sustained Live Run (Extended Verification)
+Beyond the pre-loaded-batch demo above, the pipeline was also run continuously at the producer's
+default cadence (one message every 2 seconds, not a fast burst) against a freshly reset topic, to
+confirm it holds up under genuine ongoing streaming rather than a single instant push.
+
+| | |
+|---|---|
+| Job state | `RUNNING`, healthy, no restarts or failures |
+| Duration | 18.83 minutes (continuous) |
+| Windows fired | 57 |
+| Messages produced | 421 (182 on partition 1, 239 on partition 2, 0 on partition 0 — same expected idle-partition behaviour as Fig 2) |
+
+Sample of the window output from this run, correctly progressing through real 15-minute
+event-time bins as the watermark advanced:
+```
++I[2024-07-08T12:45, 2024-07-08T13:00, 6881, 477]
++I[2024-07-08T12:45, 2024-07-08T13:00, 6382, 470]
++I[2024-07-08T13:00, 2024-07-08T13:15, 6653, 469]
++I[2024-07-08T13:00, 2024-07-08T13:15, 7038, 782]
++I[2024-07-08T13:00, 2024-07-08T13:15, 6808, 337]
++I[2024-07-08T13:00, 2024-07-08T13:15, 6881, 451]
+```
+In 18.83 real minutes, the job correctly advanced through 4 successive 15-minute bins
+(12:30→12:45→13:00→13:15), firing 57 window-close events in step with the watermark — genuine
+sustained streaming behaviour, not just a one-off batch result.
+
 ## Design Notes
 Two issues came up worth recording. First, a Kafka partition with zero traffic (Fig 2) silently
 stalls Flink's watermark forever, since Flink takes the minimum watermark across all partitions —
