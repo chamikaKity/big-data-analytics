@@ -37,9 +37,9 @@ container).
 
 | | |
 |---|---|
-| API | Table API / SQL (not DataStream — [why](#datastream-api-silently-never-fired)) |
+| API | Table API / SQL (not DataStream — [why](#3-datastream-api-silently-never-fired)) |
 | Watermark | `read_date - INTERVAL '10' SECOND` (bounded-out-of-orderness) |
-| Window | `TUMBLE`, 15 minutes ([not the brief's 10 — why](#window-is-15-min-not-10)) |
+| Window | `TUMBLE`, 15 minutes ([not the brief's 10 — why](#1-window-15-min-not-the-briefs-10-min)) |
 | Aggregation | `SUM(volume)` grouped by `atd_device_id` |
 | Output | `print` connector sink → TaskManager stdout |
 
@@ -65,26 +65,30 @@ into both containers at `/opt/flink/jobs`.
 
 ## Design Decisions & Debugging Notes
 
-#### Window is 15 min, not 10
-The brief says 10 minutes. The source data is pre-aggregated into 15-minute bins
-(`bin_duration=900`), and 10 doesn't divide evenly into 15 — 1 in every 3 ten-minute windows
-lands on a gap between bins and silently produces nothing. Using 15-minute windows instead makes
-every window map 1:1 onto a real observation bin, so nothing gets dropped.
+Each note below follows the same shape: what happened, why, what we did about it.
 
-#### Idle Kafka partition stalls the watermark
-7 sensor IDs hashed across 3 partitions → one partition got zero messages. Flink computes the
-job's watermark as the *minimum* across all partitions, so that one empty partition blocked
-everything forever — data was flowing (`numRecordsIn` healthy) but no window ever closed
-(`numRecordsOut` stuck at 0). Fix: `'scan.watermark.idle-timeout' = '20s'` on the source table,
-which excludes silent partitions from the watermark calculation.
+### 1. Window: 15 min, not the brief's 10 min
+- **Why:** the source data is pre-aggregated into 15-minute bins (`bin_duration=900`). 10 doesn't
+  divide evenly into 15, so 1 in every 3 ten-minute windows lands on a gap between bins and
+  silently produces nothing.
+- **Decision:** use 15-minute windows instead. Every window then maps 1:1 onto a real observation
+  bin, so nothing gets dropped.
 
-#### DataStream API silently never fired
-The first working version used the DataStream Python API (`.map()` → `.key_by()` →
-`.window()` → `.reduce()`). It looked correct, ran without errors, consumed data fine — but under
-close testing (isolated to a single-partition topic, parallelism 1, to rule out the idle-partition
-issue above) the window still never fired, even after 15+ minutes of real runtime.
+### 2. Idle Kafka partition stalls the watermark
+- **Symptom:** data was flowing fine (`numRecordsIn` healthy) but no window ever closed
+  (`numRecordsOut` stuck at 0).
+- **Cause:** 7 sensor IDs hashed across 3 partitions → one partition got zero messages. Flink
+  computes the job's watermark as the *minimum* across all partitions, so that one empty
+  partition blocked everything, forever.
+- **Fix:** `'scan.watermark.idle-timeout' = '20s'` on the source table — excludes silent
+  partitions from the watermark calculation.
 
-**Root cause:** DataStream Python UDFs execute out-of-process through Apache Beam's Python worker
-bridge (`pemja`, JNI). Watermark propagation across that process boundary was unreliable.
-**Fix:** rewrote the same logic as pure SQL/Table API — `SUM()` and `TUMBLE()` compile to native
-JVM execution, no Python UDF involved — and it fired correctly within seconds.
+### 3. DataStream API silently never fired
+- **Symptom:** the first working version (DataStream Python API: `.map()` → `.key_by()` →
+  `.window()` → `.reduce()`) looked correct and ran without errors — but under close testing
+  (single-partition topic, parallelism 1, ruling out the idle-partition issue above) the window
+  still never fired, even after 15+ minutes of real runtime.
+- **Cause:** DataStream Python UDFs execute out-of-process through Apache Beam's Python worker
+  bridge (`pemja`, JNI). Watermark propagation across that process boundary was unreliable.
+- **Fix:** rewrote the same logic as pure SQL/Table API — `SUM()` and `TUMBLE()` compile to
+  native JVM execution, no Python UDF involved — and it fired correctly within seconds.
