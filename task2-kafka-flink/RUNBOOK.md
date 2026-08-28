@@ -42,9 +42,8 @@ uv run producer.py                                    # full 5000-row run, one m
 uv run producer.py --limit 450 --interval-seconds 0.02 # fast burst for testing/demo
 ```
 
-Reads `data/camera_traffic_counts.csv` (gitignored — see README for the fetch command if it's
-missing), sorts by `read_date` ascending, publishes JSON keyed by `atd_device_id`. Stop anytime
-with Ctrl+C.
+Reads `data/camera_traffic_counts.csv` (committed to git — see README for why), sorts by
+`read_date` ascending, publishes JSON keyed by `atd_device_id`. Stop anytime with Ctrl+C.
 
 Verify messages landed:
 ```bash
@@ -52,6 +51,8 @@ docker exec kafka /opt/kafka/bin/kafka-console-consumer.sh \
   --bootstrap-server localhost:9092 --topic traffic-telemetry \
   --from-beginning --property print.key=true --max-messages 5 --timeout-ms 10000
 ```
+
+Or visually, via Kafka UI — see step 5.
 
 ## 4. Submit the Flink job
 
@@ -70,7 +71,10 @@ job is written as SQL rather than DataStream Python — the DataStream version s
 
 ## 5. Verify it's working
 
-Dashboard: [http://localhost:8081](http://localhost:8081) — job should show `RUNNING`.
+Kafka UI: [http://localhost:8085](http://localhost:8085) — browse topics, partitions, offsets,
+and consumer groups visually (`kafbat/kafka-ui`, connects to the broker automatically).
+
+Flink dashboard: [http://localhost:8081](http://localhost:8081) — job should show `RUNNING`.
 
 ```bash
 # via REST
