@@ -10,6 +10,7 @@ Stream Austin traffic camera data through Kafka, aggregate it in Flink with even
 
 - Kafka: KRaft mode, single node, `apache/kafka:3.8.0`
 - Flink: JobManager + TaskManager, `flink:1.19.1-scala_2.12-java11`
+- Kafka UI: `kafbat/kafka-ui`, browser view of topics/partitions/consumer groups (`localhost:8085`)
 - Shared Docker network `bigdata-net`
 - Verified: topic create/list/delete works; dashboard (`localhost:8081`) shows 1 TaskManager, 2 slots
 
