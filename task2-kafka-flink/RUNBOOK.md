@@ -81,14 +81,15 @@ Flink dashboard: [http://localhost:8081](http://localhost:8081) — job should s
 curl -s http://localhost:8081/jobs/overview | python3 -m json.tool
 
 # actual window output (print-connector sink writes to TaskManager stdout)
-docker logs taskmanager | grep "window_total_volume"
+docker logs taskmanager | grep -E "\+I\["
 ```
 
 Expect rows like:
 ```
 2> +I[2024-07-08T12:30, 2024-07-08T12:45, 6653, 313]
 ```
-`+I` = Flink changelog "insert" marker (normal for append-only windowed aggregates). If you see
+Columns: `window_start, window_end, atd_device_id, window_total_volume`. `+I` = Flink changelog
+"insert" marker (normal for append-only windowed aggregates). If you see
 `numRecordsIn` growing on the window operator but no `+I[` rows after a minute or so, something's
 wrong — don't assume it just needs more time (see Troubleshooting below).
 
