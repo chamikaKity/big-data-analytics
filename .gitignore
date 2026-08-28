@@ -26,6 +26,9 @@ data/
 **/spark-data/
 **/grafana-data/
 
+# Local-only scratch figures, not for the public repo
+task4-neo4j/fig-all/
+
 # Editors
 .vscode/
 .idea/
