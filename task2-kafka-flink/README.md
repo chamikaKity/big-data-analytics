@@ -4,6 +4,8 @@ Stream Austin traffic camera data through Kafka, aggregate it in Flink with even
 
 **Dataset:** [Camera Traffic Counts](https://data.austintexas.gov/Transportation-and-Mobility/Camera-Traffic-Counts/sh59-i6y9/about_data) (Austin, Socrata)
 
+**Report:** [Task-2-Report.md](Task-2-Report.md) — full writeup with figures.
+
 **Status:** 2.1 ✅ · 2.2 ✅ · 2.3 ✅ — see `RUNBOOK.md` for commands, this file is the design writeup.
 
 ## 2.1 — Infrastructure
