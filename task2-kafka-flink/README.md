@@ -20,13 +20,13 @@ Stream Austin traffic camera data through Kafka, aggregate it in Flink with even
 - `scripts/producer.py` — sorts by `read_date`, publishes JSON every 2s, keyed by `atd_device_id`
 - Verified via console consumer
 
-**Dataset is committed to git**, unlike the other tasks. The underlying Socrata table is actually
-historical/frozen — its most recent row is still 2024-07-08 no matter when you query it, verified
-by re-fetching weeks apart and getting identical rows back. The reproducibility risk is narrower
-than "the table keeps growing": thousands of rows share the *exact same* `read_date` timestamp
-(many rows per 15-minute bin), so `$order=read_date DESC&$limit=5000` has no fully unique
-tie-breaker — Socrata isn't guaranteed to return the same 5000 rows byte-for-byte on a re-run.
-Committing the file removes that risk (`.gitignore` has an explicit exception for it).
+**Dataset is committed to git**, unlike the other tasks. Data source:
+[Austin Camera Traffic Counts](https://data.austintexas.gov/Transportation-and-Mobility/Camera-Traffic-Counts/sh59-i6y9/about_data)
+(Socrata) — historical and frozen, last updated 2024-07-08.
+
+The 5000 rows come from `$order=read_date DESC&$limit=5000`, but thousands of rows share the same
+`read_date`, so there's no unique tie-breaker — a re-fetch isn't guaranteed to return the exact
+same rows. Committing the file avoids that (`.gitignore` has an explicit exception for it).
 
 ## 2.3 — Windowed Aggregation Job
 
