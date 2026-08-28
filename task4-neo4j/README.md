@@ -6,6 +6,8 @@ Cypher queries for neighbor lookup, in-degree centrality (top cited patents), an
 
 **Dataset:** https://snap.stanford.edu/data/cit-Patents.html
 
+**Report:** [Task-4-Report.md](Task-4-Report.md) — full writeup with figures.
+
 **Status:** Task 4 complete.
 
 **4.1 — done.** Neo4j Community container up via `docker-compose.yml` (ports 7474/7687, custom
