@@ -20,9 +20,10 @@ Stream Austin traffic camera data through Kafka, aggregate it in Flink with even
 - `scripts/producer.py` — sorts by `read_date`, publishes JSON every 2s, keyed by `atd_device_id`
 - Verified via console consumer
 
-**Dataset is committed to git**, unlike the other tasks. Data source:
+**Dataset is committed to git** (`data/camera_traffic_counts.csv`), unlike the other tasks —
+kept for exact reproducibility. Source:
 [Austin Camera Traffic Counts](https://data.austintexas.gov/Transportation-and-Mobility/Camera-Traffic-Counts/sh59-i6y9/about_data)
-(Socrata) — historical and frozen, last updated 2024-07-08.
+(Socrata), historical and frozen, last updated 2024-07-08.
 
 The 5000 rows come from `$order=read_date DESC&$limit=5000`, but thousands of rows share the same
 `read_date`, so there's no unique tie-breaker — a re-fetch isn't guaranteed to return the exact
