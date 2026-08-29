@@ -92,16 +92,19 @@ Total application wall time: **12.5s** (start 02:51:16.008 → end 02:51:28.521 
 the broadcast-join `count`, and the final `csv` write):
 ![Jobs Timeline](figures/02_jobs_timeline.png)
 
-**Fig 3** — Job 2's stage breakdown: Stage 3 (200/200 tasks, 5.4 MiB shuffle read, 137.1 KiB
+**Fig 3** — Details for Job 2 (the `orderBy(desc).limit(50)` top-50 computation): SUCCEEDED in
+3s, 2 completed stages + 1 skipped, with the executor-add event timeline:
+![Job 2 Details](figures/03_job2_details.png)
+
+**Fig 4** — Job 2's stage breakdown: Stage 3 (200/200 tasks, 5.4 MiB shuffle read, 137.1 KiB
 shuffle write — the groupBy reduce-side sort) and Stage 4 (44 ms, 137.1 KiB shuffle read — final
 merge) completed; Stage 2 (the cached `edges` scan) skipped:
-![Job 2 Stages](figures/03_job2_stages_table.png)
+![Job 2 Stages](figures/04_job2_stages_table.png)
 
-**Fig 4** — Job 2's DAG for the same `orderBy(desc).limit(50)` top-50 computation: Stage 2
-(greyed out — the cached `edges` scan, reused rather than recomputed), Stage 3 (`Exchange` —
-the shuffle for the global sort — feeding `TakeOrderedAndProject`), and Stage 4 (final result
-collection):
-![Stage DAG](figures/04_stage_dag.png)
+**Fig 5** — Job 2's DAG for the same top-50 computation: Stage 2 (greyed out — the cached `edges`
+scan, reused rather than recomputed), Stage 3 (`Exchange` — the shuffle for the global sort —
+feeding `TakeOrderedAndProject`), and Stage 4 (final result collection):
+![Stage DAG](figures/05_stage_dag.png)
 
 ### Partition skew evidence
 The initial text-scan stage (stage 0, 4 tasks — one per core across the 2 workers) shows real
@@ -131,9 +134,9 @@ cap didn't starve either node:
 | 0 | 192.168.155.3 | 115 | 102.1 MB | 3.89 MB | 4.66 MB | 13.4 s |
 | 1 | 192.168.155.5 | 115 | 108.3 MB | 5.32 MB | 4.55 MB | 14.5 s |
 
-**Fig 5** — History Server executors tab from a repeat run, confirming the same balanced-load
+**Fig 6** — History Server executors tab from a repeat run, confirming the same balanced-load
 pattern (128/102 tasks, 103.3/97.4 MiB input split near-evenly across the two workers):
-![Executors Tab](figures/05_executors_tab.png)
+![Executors Tab](figures/06_executors_tab.png)
 
 ## Reproducing
 ```bash
