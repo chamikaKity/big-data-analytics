@@ -6,13 +6,13 @@ Enterprise data governance has historically been built around centralized reposi
 corporate data warehouses and, more recently, data lakes — that consolidate an organization's
 data under a single infrastructural and administrative umbrella. This model simplifies access
 control and auditing in principle, since a single team owns the platform, but it produces
-well-documented operational bottlenecks in practice. Jebasingh (2024) characterizes the
+well-documented operational bottlenecks in practice. Jebasingh [1] characterizes the
 centralized data lake as prone to scalability ceilings and governance drag: as ingestion volume
 and the number of consuming teams grow, a single central team becomes a throughput bottleneck
 for schema changes, quality checks, and access requests, and the lake's schema-on-read
 flexibility — an advantage at ingestion time — becomes a liability at consumption time, because
 without enforced structure the lake degrades into what practitioners call a "data swamp"
-(Sawadogo and Darmont, 2021). Sawadogo and Darmont (2021) trace this degradation directly to
+[2]. Sawadogo and Darmont [2] trace this degradation directly to
 weak metadata management: when the metadata layer describing a dataset's schema, provenance,
 and quality is thin or inconsistent, downstream consumers cannot reliably discover or trust the
 data, regardless of how well the underlying storage layer scales.
@@ -20,8 +20,8 @@ data, regardless of how well the underlying storage layer scales.
 Data Mesh, the leading distributed alternative, addresses this by decomposing the monolithic
 platform into domain-owned "data products," each governed locally by the team that best
 understands it, coordinated through a federated (rather than centralized) governance model
-(Jebasingh, 2024). This is architecturally attractive because it aligns data ownership with
-domain expertise and removes the central team as a bottleneck. However, Bode et al. (2024),
+[1]. This is architecturally attractive because it aligns data ownership with
+domain expertise and removes the central team as a bottleneck. However, Bode et al. [3],
 reporting on fifteen semi-structured interviews with practitioners who implemented Data Mesh in
 production, found that the transition is harder than the architectural pitch suggests: organizations
 struggled with the cultural shift toward federated accountability, with the added engineering
@@ -39,7 +39,7 @@ of the informal, often undocumented expectations that centralized platforms allo
 away with.
 
 Regulatory constraints intersect with both models at every stage of the pipeline lifecycle.
-Rhahla, Allegue and Abdellatif (2021) map GDPR's principles — data minimization, purpose
+Rhahla, Allegue and Abdellatif [4] map GDPR's principles — data minimization, purpose
 limitation, lawful basis for processing, and the right to erasure — onto concrete pipeline stages,
 arguing that compliance cannot be retrofitted onto a finished architecture but must be designed in
 from ingestion (capturing only the fields whose purpose is documented and lawful), through
@@ -52,14 +52,14 @@ what data is held and the right to opt out of its sale — with the same practic
 architecture. In a centralized data lake, lineage can, in theory, be captured centrally since all data
 passes through one platform team's tooling; in a federated Data Mesh, each domain must
 independently guarantee it can trace and erase its own data, which raises the coordination burden
-Bode et al. (2024) describe.
+Bode et al. [3] describe.
 
 Metadata catalog systems are the operational answer to this lineage and access-control problem in
 either architecture. Apache Atlas, built for the Hadoop ecosystem, and the more recently developed
 OpenMetadata both maintain a graph of relationships between datasets, transformation jobs, and
 the columns or tables they read and write, allowing an organization to answer "where did this
 value come from" and "everywhere this value went" programmatically rather than by
-institutional memory (Sawadogo and Darmont, 2021). This lineage graph is also what makes
+institutional memory [2]. This lineage graph is also what makes
 fine-grained access control enforceable at scale: because the catalog knows which downstream
 tables were derived from a source containing regulated personal data, access policies and
 masking rules attached to the source can be propagated automatically to every derived asset,
@@ -78,7 +78,7 @@ super-polynomial as data volume scales — nearest-neighbor search over high-dim
 embeddings, optimal query plan selection over large joins, and clustering over large unlabeled
 datasets among them. Quantum Machine Learning (QML) targets a subset of these by re-expressing
 the underlying linear algebra in a Hilbert space where certain operations scale more favorably.
-Chen et al. (2024) survey the leading QML primitives — quantum support vector
+Chen et al. [5] survey the leading QML primitives — quantum support vector
 machines, quantum principal component analysis, and quantum k-means — each of which
 reformulates a classically expensive kernel or eigen-decomposition step using quantum state
 amplitudes, offering, under specific data-encoding assumptions, exponential speedups over their
@@ -91,7 +91,7 @@ HNSW, IVF) solve today, but with a fundamentally different scaling profile once 
 hardware exists at sufficient qubit counts.
 
 The disruption to cryptography is more immediate and better characterized than the disruption to
-indexing. Dam et al. (2023) document that Shor's algorithm, once run on a sufficiently large
+indexing. Dam et al. [6] document that Shor's algorithm, once run on a sufficiently large
 fault-tolerant quantum computer, breaks the discrete-log and integer-factorization assumptions
 underlying RSA and elliptic-curve cryptography — the two families of asymmetric cryptographic
 signatures that essentially all current database and pipeline authentication depend on. Their survey
@@ -110,7 +110,7 @@ policies already assume.
 
 A second disruption is unfolding at the opposite end of determinism: embedding Large Language
 Models directly inside data engineering control loops. The clearest, most rigorously evaluated
-example is text-to-SQL synthesis. Pourreza and Rafiei (2023) show, with DIN-SQL, that
+example is text-to-SQL synthesis. Pourreza and Rafiei [7] show, with DIN-SQL, that
 decomposing the text-to-SQL task into sub-problems — schema linking, query classification by
 difficulty, SQL generation, then a dedicated self-correction pass that re-prompts the model with
 any execution error the generated query produced — measurably improves execution accuracy
@@ -135,7 +135,7 @@ execution plans that produce identical output given identical input — because 
 what make distributed fault tolerance possible: if a task fails partway through, the engine can
 recompute exactly the same result from the last checkpoint. An LLM sitting inside that same
 pipeline, generating a transformation, a repair patch, or a SQL query on demand, offers no such
-guarantee: the same prompt can produce a different (if built on Pourreza and Rafiei's (2023)
+guarantee: the same prompt can produce a different (if built on Pourreza and Rafiei's [7]
 self-correction pattern, hopefully converging, but not identically reproducing) output on a
 re-execution, which breaks the replay assumption Spark and Flink's recovery model depends on.
 The practical bottleneck this creates is not merely "the LLM might be wrong" — traditional code
@@ -156,24 +156,24 @@ without error" is a necessary but not sufficient definition of correct.
 
 ## References
 
-Bode, J., Kühl, N., Kreuzberger, D. and Hirschl, S. (2024) 'Toward Avoiding the Data Mess:
-Industry Insights From Data Mesh Implementations', *IEEE Access*, 12, pp.95402-95416.
-
-Chen, L. et al. (2024) 'Design and analysis of quantum machine learning: a
-survey', *Connection Science*, 36(1), 2312121.
-
-Dam, D.-T., Tran, T.-H., Hoang, V.-P., Pham, C.-K. and Hoang, T.-T. (2023) 'A Survey of
-Post-Quantum Cryptography: Start of a New Race', *Cryptography*, 7(3), 40.
-
-Jebasingh, S.D. (2024) 'Data Lakes and Data Mesh Architectures: Enabling Scalable and
+[1] Jebasingh, S.D. (2024) 'Data Lakes and Data Mesh Architectures: Enabling Scalable and
 Decentralized Data Governance', *International Journal of Emerging Trends in Computer Science
 and Information Technology*, 5(4), pp.16-22.
 
-Pourreza, M. and Rafiei, D. (2023) 'DIN-SQL: Decomposed In-Context Learning of Text-to-SQL
-with Self-Correction', *Advances in Neural Information Processing Systems*, 36.
+[2] Sawadogo, P.N. and Darmont, J. (2021) 'On data lake architectures and metadata management',
+*Journal of Intelligent Information Systems*, 56, pp.97-120.
 
-Rhahla, M., Allegue, S. and Abdellatif, T. (2021) 'Guidelines for GDPR compliance in Big Data
+[3] Bode, J., Kühl, N., Kreuzberger, D. and Hirschl, S. (2024) 'Toward Avoiding the Data Mess:
+Industry Insights From Data Mesh Implementations', *IEEE Access*, 12, pp.95402-95416.
+
+[4] Rhahla, M., Allegue, S. and Abdellatif, T. (2021) 'Guidelines for GDPR compliance in Big Data
 systems', *Journal of Information Security and Applications*, 61, 102896.
 
-Sawadogo, P.N. and Darmont, J. (2021) 'On data lake architectures and metadata management',
-*Journal of Intelligent Information Systems*, 56, pp.97-120.
+[5] Chen, L. et al. (2024) 'Design and analysis of quantum machine learning: a
+survey', *Connection Science*, 36(1), 2312121.
+
+[6] Dam, D.-T., Tran, T.-H., Hoang, V.-P., Pham, C.-K. and Hoang, T.-T. (2023) 'A Survey of
+Post-Quantum Cryptography: Start of a New Race', *Cryptography*, 7(3), 40.
+
+[7] Pourreza, M. and Rafiei, D. (2023) 'DIN-SQL: Decomposed In-Context Learning of Text-to-SQL
+with Self-Correction', *Advances in Neural Information Processing Systems*, 36.
