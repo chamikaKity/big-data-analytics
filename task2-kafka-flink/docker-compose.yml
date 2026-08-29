@@ -51,6 +51,7 @@ services:
         jobmanager.rpc.address: jobmanager
     volumes:
       - ./jobs:/opt/flink/jobs
+      - ./checkpoints:/opt/flink/checkpoints
     networks:
       - bigdata-net
 
@@ -67,6 +68,7 @@ services:
         taskmanager.numberOfTaskSlots: 2
     volumes:
       - ./jobs:/opt/flink/jobs
+      - ./checkpoints:/opt/flink/checkpoints
     networks:
       - bigdata-net
 

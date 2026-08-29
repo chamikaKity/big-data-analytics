@@ -35,6 +35,7 @@ data/
 **/neo4j-data/
 **/spark-data/
 **/grafana-data/
+task2-kafka-flink/checkpoints/
 
 # Local-only scratch figures, not for the public repo
 task4-neo4j/fig-all/

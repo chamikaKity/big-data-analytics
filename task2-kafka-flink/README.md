@@ -44,6 +44,7 @@ container).
 | Window | `TUMBLE`, 15 minutes ([not the brief's 10 — why](#1-window-15-min-not-the-briefs-10-min)) |
 | Aggregation | `SUM(volume)` grouped by `atd_device_id` |
 | Output | `print` connector sink → TaskManager stdout |
+| Checkpointing | Every 10s, `EXACTLY_ONCE`, state to a shared Docker volume (`checkpoints/`) |
 
 Sample output (verified, correctly aligned to source bins, no gaps):
 ```

@@ -26,6 +26,16 @@ def main():
     t_env = TableEnvironment.create(env_settings)
     t_env.get_config().set("parallelism.default", "2")
 
+    # The windowed SUM(volume) aggregation is stateful - Flink holds partial
+    # per-sensor, per-window sums until each window closes. Without
+    # checkpointing, a TaskManager crash mid-window loses that in-flight
+    # state entirely; checkpointing periodically snapshots it to durable
+    # storage so the job can resume from the last checkpoint instead.
+    t_env.get_config().set("execution.checkpointing.interval", "10s")
+    t_env.get_config().set("execution.checkpointing.mode", "EXACTLY_ONCE")
+    t_env.get_config().set("state.checkpoints.dir", "file:///opt/flink/checkpoints")
+    t_env.get_config().set("state.checkpoints.num-retained", "5")
+
     t_env.execute_sql(f"""
         CREATE TABLE traffic (
             atd_device_id STRING,

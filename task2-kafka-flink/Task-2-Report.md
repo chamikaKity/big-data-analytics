@@ -69,6 +69,19 @@ one total per sensor per window:
 
 ![Task 2.3 output](figures/2.3-output.png)
 
+**Checkpointing (state fault-tolerance).** The windowed `SUM(volume)` aggregation is stateful —
+Flink holds partial per-sensor, per-window sums in its state backend until each window closes.
+Without checkpointing, a TaskManager crash mid-window would lose that in-flight state entirely,
+with no way to recover it. The job enables `execution.checkpointing.interval = 10s` with
+`EXACTLY_ONCE` mode, snapshotting state to `state.checkpoints.dir` (a Docker volume shared between
+the JobManager and TaskManager containers, since filesystem-based checkpoint storage otherwise
+isn't visible across separate containers).
+
+**Fig 7** — the Checkpoints tab: 25/25 checkpoints completed, 0 failed, ~9.7KB state size, both
+operators fully acknowledged (2/2) each round:
+
+![Task 2.3 checkpoints](figures/task2_step2.3_checkpoints.png)
+
 ## Sustained Live Run (Extended Verification)
 Beyond the pre-loaded-batch demo above, the pipeline was also run continuously at the producer's
 default cadence (one message every 2 seconds, not a fast burst) against a freshly reset topic, to
