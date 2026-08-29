@@ -138,6 +138,11 @@ cap didn't starve either node:
 pattern (128/102 tasks, 103.3/97.4 MiB input split near-evenly across the two workers):
 ![Executors Tab](figures/06_executors_tab.png)
 
+**Fig 7** — Stage 3 detail page, corroborating the low-skew claim above: across all 200 tasks,
+shuffle-read size ranges only 26.4–29.3 KiB (Min–Max) and duration 4ms–0.2s, a tight spread
+consistent with hash-partitioned `dst` IDs landing evenly across partitions:
+![Stage 3 Task Skew](figures/07_stage3_task_skew.png)
+
 ## Reproducing
 ```bash
 cd task3-spark
