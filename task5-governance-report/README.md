@@ -8,4 +8,7 @@ loop engineering (autonomous ETL agents, text-to-SQL) vs. deterministic engines 
 
 No dataset — literature review / essay.
 
-**Status:** not started
+**Report:** [Task-5-Report.md](Task-5-Report.md) — full essay, ~2,000 words, Harvard referencing,
+7 peer-reviewed citations.
+
+**Status:** Task 5 complete.
