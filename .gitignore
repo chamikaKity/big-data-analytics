@@ -38,6 +38,7 @@ data/
 
 # Local-only scratch figures, not for the public repo
 task4-neo4j/fig-all/
+task2-kafka-flink/fig-all/
 
 # Editors
 .vscode/
