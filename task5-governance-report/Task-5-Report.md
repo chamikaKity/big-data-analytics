@@ -21,8 +21,7 @@ and quality is thin or inconsistent, downstream consumers cannot reliably discov
 data, regardless of how well the underlying storage layer scales.
 
 **Data warehouses trade that same flexibility for governance, and pay for it at ingestion time
-instead.** The corporate data warehouse, the older of the two centralized patterns, fails in close to
-the opposite way. Harby and Zulkernine [3] contrast the two directly: a warehouse enforces schema-on-
+instead.** Harby and Zulkernine [3] contrast the two directly: a warehouse enforces schema-on-
 write, meaning every source must be transformed and validated against a fixed relational schema
 before it is loaded, which gives warehouses strong query performance and governance guarantees
 but makes ingesting semi-structured, unstructured, or high-velocity streaming data prohibitively
@@ -101,9 +100,7 @@ coordination burden Bode et al. [5] describe.
 ### Metadata Catalogs & Lineage
 
 **Metadata catalogs are what make lineage and access control operationally enforceable, in either
-architecture.** Metadata catalog systems are the operational answer to this lineage and
-access-control problem in
-either architecture. Apache Atlas, built for the Hadoop ecosystem, and the more recently developed
+architecture.** Apache Atlas, built for the Hadoop ecosystem, and the more recently developed
 OpenMetadata both maintain a graph of relationships between datasets, transformation jobs, and
 the columns or tables they read and write, allowing an organization to answer "where did this
 value come from" and "everywhere this value went" programmatically rather than by
@@ -148,13 +145,12 @@ classical counterparts for the linear-algebraic subroutine, though not necessari
 end-to-end pipeline once state preparation and measurement overheads are accounted for.
 
 **Quantum-enhanced databases accelerate search and indexing directly, independent of any
-learning task.** Quantum-enhanced databases are a distinct paradigm from QML rather than merely
-a downstream
+learning task.** This makes them a distinct paradigm from QML rather than merely a downstream
 application of it: where QML re-expresses a learning problem's linear algebra to exploit quantum
 state amplitudes, quantum-enhanced databases instead exploit Grover's algorithm, which gives a
 quadratic speedup for unstructured search — reducing a search over N items from O(N) classical
 queries to O(√N) quantum ones — directly targeting the search and indexing operations a database
-performs internally, independent of any learning task. Grover [10] originally framed this as
+performs internally. Grover [10] originally framed this as
 searching an unsorted database for a single matching record, which is precisely database index
 lookup in its most primitive form, and Barbosa et al. [11] operationalize that speedup concretely:
 their QRLIT system replaces the epsilon-greedy exploration step of a reinforcement-learning-based
@@ -167,8 +163,7 @@ today's limited qubit counts and error rates rather than being immediately deplo
 production database scale.
 
 **Quantum computing threatens today's cryptographic signatures more immediately than it helps
-indexing.** The disruption to cryptography is more immediate and better characterized than the
-disruption to indexing. Dam et al. [12] document that Shor's algorithm, once run on a sufficiently large
+indexing.** Dam et al. [12] document that Shor's algorithm, once run on a sufficiently large
 fault-tolerant quantum computer, breaks the discrete-log and integer-factorization assumptions
 underlying RSA and elliptic-curve cryptography — the two families of asymmetric cryptographic
 signatures that essentially all current database and pipeline authentication depend on. Their survey
@@ -201,13 +196,12 @@ code-generation agents that write and iteratively repair ETL transformation code
 "self-healing" pipelines that detect a schema-drift or data-quality failure at runtime and attempt an
 automated remediation before escalating to a human operator.
 
-**Predictive pipeline optimization closes the loop before a job runs, rather than after it fails.** A
-fourth variant, predictive pipeline optimization, closes the loop before a job even runs rather than
-after it fails. Theodorakopoulos, Karras and Krimpas [14] show that supervised models
-trained on a Spark cluster's historical execution metrics can forecast a new job's runtime and
-resource requirements with up to 98% accuracy, and use that forecast to drive hyperparameter
-tuning and real-time resource allocation, cutting processing time by roughly a quarter and
-resource consumption by nearly a third. An LLM-driven version of this same loop replaces the
+**Predictive pipeline optimization closes the loop before a job runs, rather than after it fails.** This
+fourth variant trains supervised models on a Spark cluster's historical execution metrics to
+forecast a new job's runtime and resource requirements with up to 98% accuracy, then uses that
+forecast to drive hyperparameter tuning and real-time resource allocation — cutting processing
+time by roughly a quarter and resource consumption by nearly a third, as Theodorakopoulos, Karras
+and Krimpas [14] show. An LLM-driven version of this same loop replaces the
 fixed regression model with an agent that reads a job's execution plan and recent telemetry,
 reasons in natural language about which stage is likely to become the bottleneck, and proposes a
 partition count, shuffle configuration, or executor-memory setting before submission — trading
