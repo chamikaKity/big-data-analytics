@@ -19,14 +19,26 @@ weak metadata management: when the metadata layer describing a dataset's schema,
 and quality is thin or inconsistent, downstream consumers cannot reliably discover or trust the
 data, regardless of how well the underlying storage layer scales.
 
+The corporate data warehouse, the older of the two centralized patterns, fails in close to the
+opposite way. Harby and Zulkernine [3] contrast the two directly: a warehouse enforces schema-on-
+write, meaning every source must be transformed and validated against a fixed relational schema
+before it is loaded, which gives warehouses strong query performance and governance guarantees
+but makes ingesting semi-structured, unstructured, or high-velocity streaming data prohibitively
+expensive, since each new source requires its own upfront ETL engineering rather than being
+dropped in as-is. That fixed-schema, vendor-optimized storage engine is also typically proprietary,
+so an organization that commits its data warehouse to one vendor's platform faces substantial
+switching costs later — the opposite failure mode from the lake's problem of too little structure,
+but a centralized bottleneck all the same, since every new pipeline has to pass through the same
+narrow, schema-enforcing ETL gate before it is queryable at all.
+
 Data Mesh, the leading distributed alternative, addresses this by decomposing the monolithic
 platform into domain-owned "data products," each governed locally by the team that best
 understands it, coordinated through a federated (rather than centralized) governance model
-[1]. Goedegebuure et al. [3], synthesizing 114 industry sources in a systematic
+[1]. Goedegebuure et al. [4], synthesizing 114 industry sources in a systematic
 gray-literature review, confirm that this model rests on four consistent principles: data as a
 product, domain ownership of data, a self-serve data platform, and federated computational
 governance. This is architecturally attractive because it aligns data ownership with
-domain expertise and removes the central team as a bottleneck. However, Bode et al. [4],
+domain expertise and removes the central team as a bottleneck. However, Bode et al. [5],
 reporting on fifteen semi-structured interviews with practitioners who implemented Data Mesh in
 production, found that the transition is harder than the architectural pitch suggests: organizations
 struggled with the cultural shift toward federated accountability, with the added engineering
@@ -46,8 +58,8 @@ away with.
 ### Regulatory Lifecycle Governance (GDPR/CCPA)
 
 Regulatory constraints intersect with both models at every stage of the pipeline lifecycle. The
-GDPR [5] enshrines data minimization, purpose limitation, a lawful basis for processing, and the
-right to erasure as binding legal obligations, and Rhahla, Allegue and Abdellatif [6] map these
+GDPR [6] enshrines data minimization, purpose limitation, a lawful basis for processing, and the
+right to erasure as binding legal obligations, and Rhahla, Allegue and Abdellatif [7] map these
 principles onto concrete pipeline stages, arguing that compliance cannot be retrofitted onto a
 finished architecture but must be designed in
 from ingestion (capturing only the fields whose purpose is documented and lawful), through
@@ -60,7 +72,7 @@ what data is held and the right to opt out of its sale — with the same practic
 architecture. In a centralized data lake, lineage can, in theory, be captured centrally since all data
 passes through one platform team's tooling; in a federated Data Mesh, each domain must
 independently guarantee it can trace and erase its own data, which raises the coordination burden
-Bode et al. [4] describe.
+Bode et al. [5] describe.
 
 ### Metadata Catalogs & Lineage
 
@@ -88,7 +100,7 @@ super-polynomial as data volume scales — nearest-neighbor search over high-dim
 embeddings, optimal query plan selection over large joins, and clustering over large unlabeled
 datasets among them. Quantum Machine Learning (QML) targets a subset of these by re-expressing
 the underlying linear algebra in a Hilbert space where certain operations scale more favorably.
-Chen et al. [7] survey the leading QML primitives — quantum support vector
+Chen et al. [8] survey the leading QML primitives — quantum support vector
 machines, quantum principal component analysis, and quantum k-means — each of which
 reformulates a classically expensive kernel or eigen-decomposition step using quantum state
 amplitudes, offering, under specific data-encoding assumptions, exponential speedups over their
@@ -101,7 +113,7 @@ HNSW, IVF) solve today, but with a fundamentally different scaling profile once 
 hardware exists at sufficient qubit counts.
 
 The disruption to cryptography is more immediate and better characterized than the disruption to
-indexing. Dam et al. [8] document that Shor's algorithm, once run on a sufficiently large
+indexing. Dam et al. [9] document that Shor's algorithm, once run on a sufficiently large
 fault-tolerant quantum computer, breaks the discrete-log and integer-factorization assumptions
 underlying RSA and elliptic-curve cryptography — the two families of asymmetric cryptographic
 signatures that essentially all current database and pipeline authentication depend on. Their survey
@@ -120,7 +132,7 @@ policies already assume.
 
 A second disruption is unfolding at the opposite end of determinism: embedding Large Language
 Models directly inside data engineering control loops. The clearest, most rigorously evaluated
-example is text-to-SQL synthesis. Pourreza and Rafiei [9] show, with DIN-SQL, that
+example is text-to-SQL synthesis. Pourreza and Rafiei [10] show, with DIN-SQL, that
 decomposing the text-to-SQL task into sub-problems — schema linking, query classification by
 difficulty, SQL generation, then a dedicated self-correction pass that re-prompts the model with
 any execution error the generated query produced — measurably improves execution accuracy
@@ -133,7 +145,7 @@ code-generation agents that write and iteratively repair ETL transformation code
 automated remediation before escalating to a human operator.
 
 A fourth variant, predictive pipeline optimization, closes the loop before a job even runs rather
-than after it fails. Theodorakopoulos, Karras and Krimpas [10] show that supervised models
+than after it fails. Theodorakopoulos, Karras and Krimpas [11] show that supervised models
 trained on a Spark cluster's historical execution metrics can forecast a new job's runtime and
 resource requirements with up to 98% accuracy, and use that forecast to drive hyperparameter
 tuning and real-time resource allocation, cutting processing time by roughly a quarter and
@@ -160,7 +172,7 @@ execution plans that produce identical output given identical input — because 
 what make distributed fault tolerance possible: if a task fails partway through, the engine can
 recompute exactly the same result from the last checkpoint. An LLM sitting inside that same
 pipeline, generating a transformation, a repair patch, or a SQL query on demand, offers no such
-guarantee: the same prompt can produce a different (if built on Pourreza and Rafiei's [9]
+guarantee: the same prompt can produce a different (if built on Pourreza and Rafiei's [10]
 self-correction pattern, hopefully converging, but not identically reproducing) output on a
 re-execution, which breaks the replay assumption Spark and Flink's recovery model depends on.
 The practical bottleneck this creates is not merely "the LLM might be wrong" — traditional code
@@ -188,30 +200,33 @@ and Information Technology*, 5(4), pp.16-22.
 [2] Sawadogo, P.N. and Darmont, J. (2021) 'On data lake architectures and metadata management',
 *Journal of Intelligent Information Systems*, 56, pp.97-120.
 
-[3] Goedegebuure, A., Kumara, I., Driessen, S., van den Heuvel, W.-J., Monsieur, G., Tamburri,
+[3] Harby, A.A. and Zulkernine, F. (2024) 'Data Lakehouse: A survey and experimental study',
+*Information Systems*, 127, 102460.
+
+[4] Goedegebuure, A., Kumara, I., Driessen, S., van den Heuvel, W.-J., Monsieur, G., Tamburri,
 D.A. and Di Nucci, D. (2025) 'Data Mesh: A Systematic Gray Literature Review', *ACM Computing
 Surveys*, 57(1), Article 11.
 
-[4] Bode, J., Kühl, N., Kreuzberger, D. and Hirschl, S. (2024) 'Toward Avoiding the Data Mess:
+[5] Bode, J., Kühl, N., Kreuzberger, D. and Hirschl, S. (2024) 'Toward Avoiding the Data Mess:
 Industry Insights From Data Mesh Implementations', *IEEE Access*, 12, pp.95402-95416.
 
-[5] European Parliament and Council (2016) *Regulation (EU) 2016/679 of the European Parliament
+[6] European Parliament and Council (2016) *Regulation (EU) 2016/679 of the European Parliament
 and of the Council of 27 April 2016 on the protection of natural persons with regard to the
 processing of personal data and on the free movement of such data (General Data Protection
 Regulation)*, Official Journal of the European Union, L119. Available at:
 https://eur-lex.europa.eu/eli/reg/2016/679/oj (Accessed: 29 August 2026).
 
-[6] Rhahla, M., Allegue, S. and Abdellatif, T. (2021) 'Guidelines for GDPR compliance in Big Data
+[7] Rhahla, M., Allegue, S. and Abdellatif, T. (2021) 'Guidelines for GDPR compliance in Big Data
 systems', *Journal of Information Security and Applications*, 61, 102896.
 
-[7] Chen, L. et al. (2024) 'Design and analysis of quantum machine learning: a
+[8] Chen, L. et al. (2024) 'Design and analysis of quantum machine learning: a
 survey', *Connection Science*, 36(1), 2312121.
 
-[8] Dam, D.-T., Tran, T.-H., Hoang, V.-P., Pham, C.-K. and Hoang, T.-T. (2023) 'A Survey of
+[9] Dam, D.-T., Tran, T.-H., Hoang, V.-P., Pham, C.-K. and Hoang, T.-T. (2023) 'A Survey of
 Post-Quantum Cryptography: Start of a New Race', *Cryptography*, 7(3), 40.
 
-[9] Pourreza, M. and Rafiei, D. (2023) 'DIN-SQL: Decomposed In-Context Learning of Text-to-SQL
+[10] Pourreza, M. and Rafiei, D. (2023) 'DIN-SQL: Decomposed In-Context Learning of Text-to-SQL
 with Self-Correction', *Advances in Neural Information Processing Systems*, 36.
 
-[10] Theodorakopoulos, L., Karras, A. and Krimpas, G.A. (2025) 'Optimizing Apache Spark MLlib:
+[11] Theodorakopoulos, L., Karras, A. and Krimpas, G.A. (2025) 'Optimizing Apache Spark MLlib:
 Predictive Performance of Large-Scale Models for Big Data Analytics', *Algorithms*, 18(2), 74.
