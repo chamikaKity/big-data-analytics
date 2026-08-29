@@ -2,6 +2,8 @@
 
 ## Part 5.1: Enterprise Data Governance Frameworks
 
+### Centralized vs. Distributed Architectures
+
 Enterprise data governance has historically been built around centralized repositories —
 corporate data warehouses and, more recently, data lakes — that consolidate an organization's
 data under a single infrastructural and administrative umbrella. This model simplifies access
@@ -38,6 +40,8 @@ guarantees to everyone depending on it — effectively acting as an API contract
 of the informal, often undocumented expectations that centralized platforms allowed teams to get
 away with.
 
+### Regulatory Lifecycle Governance (GDPR/CCPA)
+
 Regulatory constraints intersect with both models at every stage of the pipeline lifecycle.
 Rhahla, Allegue and Abdellatif [4] map GDPR's principles — data minimization, purpose
 limitation, lawful basis for processing, and the right to erasure — onto concrete pipeline stages,
@@ -53,6 +57,8 @@ architecture. In a centralized data lake, lineage can, in theory, be captured ce
 passes through one platform team's tooling; in a federated Data Mesh, each domain must
 independently guarantee it can trace and erase its own data, which raises the coordination burden
 Bode et al. [3] describe.
+
+### Metadata Catalogs & Lineage
 
 Metadata catalog systems are the operational answer to this lineage and access-control problem in
 either architecture. Apache Atlas, built for the Hadoop ecosystem, and the more recently developed
