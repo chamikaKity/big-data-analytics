@@ -130,11 +130,26 @@ first output as final, the system executes it, observes whether it failed, and f
 signal back into another generation attempt. The same pattern generalizes to automated
 code-generation agents that write and iteratively repair ETL transformation code, and to
 "self-healing" pipelines that detect a schema-drift or data-quality failure at runtime and attempt an
-automated remediation before escalating to a human operator. The common architectural
-requirement across all of these is an executable, verifiable feedback signal — a query result, a
-test suite, a schema validator — that can tell the loop whether its last attempt actually worked,
-because without that signal the loop has no way to distinguish a plausible-looking fix from a
-correct one.
+automated remediation before escalating to a human operator.
+
+A fourth variant, predictive pipeline optimization, closes the loop before a job even runs rather
+than after it fails. Theodorakopoulos, Karras and Krimpas [10] show that supervised models
+trained on a Spark cluster's historical execution metrics can forecast a new job's runtime and
+resource requirements with up to 98% accuracy, and use that forecast to drive hyperparameter
+tuning and real-time resource allocation, cutting processing time by roughly a quarter and
+resource consumption by nearly a third. An LLM-driven version of this same loop replaces the
+fixed regression model with an agent that reads a job's execution plan and recent telemetry,
+reasons in natural language about which stage is likely to become the bottleneck, and proposes a
+partition count, shuffle configuration, or executor-memory setting before submission — trading
+the regression model's narrow, hand-engineered feature set for the LLM's ability to incorporate
+unstructured signals, such as log messages or a recent code diff, that a purely numerical model
+was never given as input.
+
+The common architectural requirement across all four of these loop-engineering patterns —
+code-generation, text-to-SQL, self-healing, and predictive optimization — is an executable,
+verifiable feedback signal — a query result, a test suite, a schema validator, or an observed
+runtime — that can tell the loop whether its last attempt actually worked, because without that
+signal the loop has no way to distinguish a plausible-looking fix from a correct one.
 
 ### Open Synthesis: Nondeterminism Meets Deterministic Engines
 
@@ -197,3 +212,6 @@ Post-Quantum Cryptography: Start of a New Race', *Cryptography*, 7(3), 40.
 
 [9] Pourreza, M. and Rafiei, D. (2023) 'DIN-SQL: Decomposed In-Context Learning of Text-to-SQL
 with Self-Correction', *Advances in Neural Information Processing Systems*, 36.
+
+[10] Theodorakopoulos, L., Karras, A. and Krimpas, G.A. (2025) 'Optimizing Apache Spark MLlib:
+Predictive Performance of Large-Scale Models for Big Data Analytics', *Algorithms*, 18(2), 74.
