@@ -5,6 +5,25 @@ Provision InfluxDB v2.x in Docker, ingest real climate time-series data with ori
 timestamps, and run Flux queries for window aggregation, anomaly detection, and downsampling
 with retention.
 
+## Why InfluxDB (vs. TimescaleDB / Prometheus)
+- **InfluxDB**: purpose-built time-series database. Its write API accepts arbitrary historical
+  timestamps directly (needed for Step 1.2 — backfilling 10+ years of past readings), and
+  retention policies + downsampling Tasks are native, first-class features — a direct match for
+  Step 1.3's requirements with no extra tooling.
+- **TimescaleDB**: a PostgreSQL extension. Full SQL, joins, ACID transactions, and continuous
+  aggregates/retention policies broadly comparable to InfluxDB's. Reasonable if the data needed
+  relational joins, but requires standing up and administering a full Postgres instance for what
+  is here a single, self-contained time-series dataset — heavier than the task needs.
+- **Prometheus**: built for pull-based operational metrics and alerting (PromQL), not general
+  historical storage — it favours short local retention with remote-write to a separate long-term
+  store, and has no straightforward push API for arbitrary past timestamps (batch-backfilling old
+  data needs an offline block-creation workflow, not a simple timestamped write). Also has known
+  label-cardinality limits and isn't designed for ad hoc statistical queries across a decade of
+  data the way Flux is.
+- For this task's actual requirements — direct historical backfill, native retention/downsampling,
+  and Flux-native windowed/statistical queries — InfluxDB is the closest fit-for-purpose of the
+  three, independent of it also being the assignment's specified tool.
+
 ## 1.1 — Environment
 InfluxDB v2.7 runs via `docker-compose.yml`: port 8086 exposed, data persisted to a local
 volume, org/bucket/token auto-bootstrapped from `.env` on first start.
@@ -21,6 +40,21 @@ A Python script (`scripts/ingest.py`, run via `uv`, using the official `influxdb
 package) parses the CSV and writes each row as an InfluxDB point, using the record's own
 timestamp — not the time the script ran. Verified: point count in InfluxDB matches the CSV
 row count exactly, and sample values/timestamps match the source file.
+
+### Schema design: tags vs. fields
+Each point uses measurement `climate`, tag `station=fairbanks`, and fields `temperature_c` /
+`precipitation_mm`. This split isn't arbitrary — InfluxDB indexes tags but not fields, so the two
+are meant for different jobs:
+- **`station` is a tag** because it's low-cardinality, categorical metadata used to filter/group
+  series (e.g. `WHERE station = "fairbanks"`). Tags are what InfluxDB's index is built around, so
+  this is the cheap, fast way to scale to multiple stations later.
+- **`temperature_c` / `precipitation_mm` are fields** because they're continuously-varying numeric
+  measurements with effectively unbounded distinct values. Making a high-cardinality value like
+  temperature a *tag* instead is a well-known InfluxDB anti-pattern — every distinct tag value
+  creates a new indexed series, so tens of thousands of unique readings would explode the series
+  cardinality and badly degrade write/query performance. Fields avoid this: they're stored and
+  compressed per-series without being indexed, correct for values you aggregate over rather than
+  filter by exact match.
 
 **Fig 1 & 2** — the ingested hourly data queried back from InfluxDB, full 2015-2026 range,
 confirming a clean seasonal pattern with no gaps:
