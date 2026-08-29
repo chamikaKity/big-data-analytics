@@ -7,7 +7,10 @@ identify the top 50 destination nodes with caching/broadcast-join optimizations.
 durations, DAG structure, and shuffle/skew evidence from the Spark UI.
 
 **Dataset:** [SNAP web-BerkStan](https://snap.stanford.edu/data/web-BerkStan.html) — 685,230
-nodes, 7,600,595 directed edges.
+nodes, 7,600,595 directed edges. Each node is a crawled page from berkeley.edu or stanford.edu;
+each directed edge is a hyperlink from one page to another, same-domain or cross-domain:
+
+![BerkStan Hyperlink Graph](figures/berkstan_hyperlink_graph.png)
 
 ## 3.1 — Cluster
 `docker-compose.yml` runs `apache/spark:3.5.9-python3` as one master (UI :8080, RPC :7077) and
