@@ -12,5 +12,10 @@ curl -sSL -o data/web-BerkStan.txt.gz https://snap.stanford.edu/data/web-BerkSta
 gunzip -k data/web-BerkStan.txt.gz
 ```
 
-**Status:** 3.1–3.3 done — cluster up, in-degree job written and run, results in
-`Task-3-Report.md` (screenshots pending)
+**Status:**
+- 3.1 — done: cluster up (1 master + 2 workers, 2 cores/2GB each), History Server for UI evidence.
+- 3.2 — done: `scripts/indegree_job.py` run via `spark-submit` on the live cluster — lazy-parsed
+  the edge list, cached DataFrame, `groupBy` in-degree, top 50 via broadcast join. Output
+  committed at `output/top50_indegree/top50_indegree.csv`; full results in `Task-3-Report.md`.
+- 3.3 — in progress: stage/shuffle/skew metrics documented in `Task-3-Report.md`; UI screenshots
+  pending.
