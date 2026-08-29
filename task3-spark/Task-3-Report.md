@@ -62,10 +62,8 @@ Top 10 destination nodes by in-degree:
 | 33 | 44,032 |
 | 743 | 44,022 |
 
-Full top-50 output written to `data/output/top50_indegree/` (CSV, gitignored alongside the raw
-dataset) — a copy is committed at
-[`output/top50_indegree/top50_indegree.csv`](output/top50_indegree/top50_indegree.csv) as
-evidence of the result.
+The full top-50 output is in
+[`output/top50_indegree/top50_indegree.csv`](output/top50_indegree/top50_indegree.csv).
 
 ## 3.3 — Spark UI Evidence
 Captured from the Spark History Server (`localhost:18080`) for application
