@@ -17,5 +17,7 @@ gunzip -k data/web-BerkStan.txt.gz
 - 3.2 — done: `scripts/indegree_job.py` run via `spark-submit` on the live cluster — lazy-parsed
   the edge list, cached DataFrame, `groupBy` in-degree, top 50 via broadcast join. Output
   committed at `output/top50_indegree/top50_indegree.csv`; full results in `Task-3-Report.md`.
-- 3.3 — in progress: stage/shuffle/skew metrics documented in `Task-3-Report.md`; UI screenshots
-  pending.
+- 3.3 — done: stage/shuffle/skew metrics and 4 Spark UI screenshots (master UI, jobs timeline,
+  stage DAG, executors tab) in `Task-3-Report.md`.
+
+**Task 3 complete.**

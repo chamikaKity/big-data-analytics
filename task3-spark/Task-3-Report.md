@@ -92,7 +92,10 @@ Total application wall time: **12.5s** (start 02:51:16.008 → end 02:51:28.521 
 the broadcast-join `count`, and the final `csv` write):
 ![Jobs Timeline](figures/02_jobs_timeline.png)
 
-**Fig 3** — Stage 1 detail page showing the DAG for the parse → cache → groupBy shuffle:
+**Fig 3** — Job detail page DAG for the `orderBy(desc).limit(50)` top-50 computation: Stage 2
+(greyed out — the cached `edges` scan, reused rather than recomputed), Stage 3 (`Exchange` —
+the shuffle for the global sort — feeding `TakeOrderedAndProject`), and Stage 4 (final result
+collection):
 ![Stage DAG](figures/03_stage_dag.png)
 
 ### Partition skew evidence
@@ -123,7 +126,8 @@ cap didn't starve either node:
 | 0 | 192.168.155.3 | 115 | 102.1 MB | 3.89 MB | 4.66 MB | 13.4 s |
 | 1 | 192.168.155.5 | 115 | 108.3 MB | 5.32 MB | 4.55 MB | 14.5 s |
 
-**Fig 4** — History Server executors tab confirming the balanced task/byte split above:
+**Fig 4** — History Server executors tab from a repeat run, confirming the same balanced-load
+pattern (128/102 tasks, 103.3/97.4 MiB input split near-evenly across the two workers):
 ![Executors Tab](figures/04_executors_tab.png)
 
 ## Reproducing
