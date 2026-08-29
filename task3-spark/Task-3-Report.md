@@ -173,6 +173,23 @@ trades one extra shuffle stage for turning one overloaded reducer into N balance
 it only when a real hot-key skew shows up in the task metrics, which is exactly the kind of
 evidence Fig 7 provides for deciding it wasn't needed here.
 
+## Limitations / what I'd do differently at scale
+This whole cluster runs on one host (4 cores/4GB total across 2 workers), and 7.6M edges fits
+comfortably in memory — real web-scale graphs (billions of edges) would need actual multi-node
+placement, Parquet instead of a raw text scan, and a partition count tuned to data volume rather
+than the fixed default this report argues down from. Just as importantly, BerkStan's in-degree
+distribution never actually stressed the cluster — the salting mitigation in the tuning notes
+above is argued from first principles, not exercised against a genuinely skewed key distribution,
+so it's unverified against this codebase specifically.
+
+## References
+- Apache Spark, *Spark Standalone Mode* — https://spark.apache.org/docs/latest/spark-standalone.html
+- Apache Spark, *Monitoring and Instrumentation* (Spark UI, History Server) — https://spark.apache.org/docs/latest/monitoring.html
+- Apache Spark, *Configuration* (`spark.sql.shuffle.partitions` and other tuning knobs) — https://spark.apache.org/docs/latest/configuration.html
+- Apache Spark, *PySpark DataFrame API Reference* — https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/dataframe.html
+- SNAP, *web-BerkStan dataset* — https://snap.stanford.edu/data/web-BerkStan.html
+- Docker Hub, `apache/spark` official image — https://hub.docker.com/r/apache/spark
+
 ## Reproducing
 ```bash
 cd task3-spark
