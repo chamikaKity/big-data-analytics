@@ -149,6 +149,30 @@ shuffle-read size ranges only 26.4–29.3 KiB (Min–Max) and duration 4ms–0.2
 consistent with hash-partitioned `dst` IDs landing evenly across partitions:
 ![Stage 3 Task Skew](figures/07_stage3_task_skew.png)
 
+### Tuning notes: shuffle partitions and skew mitigation
+`spark.sql.shuffle.partitions` defaults to 200, and the job never overrides it. For this
+aggregate that's over-provisioned: the groupBy reduces 7.6M edges down to 617,094 (dst, count)
+pairs — spread across 200 reduce tasks, each handles only ~3,200 records and ~28 KB (Fig 7),
+well below the point where a task's own scheduling overhead is worth paying to parallelize
+further. A partition count closer to the total core count (4, or a small multiple like 8-16)
+would cut scheduling overhead with no real loss of parallelism at this data size. 200 only starts
+paying for itself at datasets with far more than 617K reduce-side keys.
+
+The task-level evidence above (Fig 7) shows this dataset didn't need skew mitigation — hash
+partitioning on `dst` already spread load evenly, and because `count()` is algebraic, Spark
+map-side pre-aggregates before the shuffle, so even the busiest hub node (in-degree 84,208)
+contributes one small partial count per source partition, not 84,208 raw rows. Skew becomes a
+real problem in two cases this job doesn't hit: a `groupBy` on a non-associative aggregate (e.g.
+`collect_list`) where no map-side combine is possible, or a join where a handful of hub keys
+match a disproportionate share of rows on the other side (a join against `edges` keyed on a
+popular `dst`, for instance, rather than the broadcast join used here). The standard fix in both
+cases is **salting**: append a random suffix (`dst_salted = dst || '_' || rand(0, N)`) to spread
+a hot key across N synthetic partitions for the shuffle, aggregate/join per salted key, then
+strip the suffix and merge the N partial results in a second, much cheaper reduce pass. It
+trades one extra shuffle stage for turning one overloaded reducer into N balanced ones — worth
+it only when a real hot-key skew shows up in the task metrics, which is exactly the kind of
+evidence Fig 7 provides for deciding it wasn't needed here.
+
 ## Reproducing
 ```bash
 cd task3-spark
