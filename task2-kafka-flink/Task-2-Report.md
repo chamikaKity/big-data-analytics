@@ -117,3 +117,19 @@ actually fired a window even after 15+ minutes of runtime — DataStream Python 
 out-of-process through Apache Beam's Python worker bridge, and watermark propagation across that
 boundary proved unreliable. Rewriting the same logic as Table API / SQL (shown above) avoids
 Python UDFs entirely and fired correctly within seconds. Full detail in `README.md`.
+
+## Limitations / what I'd do differently at scale
+Kafka runs as a single broker at replication factor 1 — fine for a coursework demo, but real
+deployment needs RF≥3 across multiple brokers for actual fault tolerance, since right now any
+broker loss is data loss. Flink also runs one TaskManager at parallelism 2; this was never tested
+under real throughput/backpressure, and the watermark-idleness workaround for the always-empty
+partition is a symptom of too few active sensors for 3 partitions — at real scale, partition
+count should track sensor count, not be fixed upfront.
+
+## References
+- Apache Kafka, *KRaft documentation* — https://kafka.apache.org/documentation/#kraft
+- Confluent, *confluent-kafka-python* — https://docs.confluent.io/kafka-clients/python/current/overview.html
+- Apache Flink, *Table API & SQL* — https://nightlies.apache.org/flink/flink-docs-release-1.19/docs/dev/table/overview/
+- Apache Flink, *Watermarks and event time* — https://nightlies.apache.org/flink/flink-docs-release-1.19/docs/dev/datastream/event-time/generating_watermarks/
+- Apache Flink, *Checkpointing* — https://nightlies.apache.org/flink/flink-docs-release-1.19/docs/dev/datastream/fault-tolerance/checkpointing/
+- Austin Open Data Portal (Socrata), *Camera Traffic Counts* — https://data.austintexas.gov/Transportation-and-Mobility/Camera-Traffic-Counts/sh59-i6y9/about_data

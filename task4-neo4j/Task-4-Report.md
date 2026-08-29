@@ -82,3 +82,17 @@ relationship at least once — exactly the same full-table cost a SQL `GROUP BY`
 `citations` table would incur. The graph model wins specifically where the query starts from a
 known node and traverses a bounded number of hops, which is the case 4.3a and 4.3c demonstrate
 and 4.3b, by its aggregate nature, does not.
+
+## Limitations / what I'd do differently at scale
+Only the first 5,000 edges of cit-Patents were loaded (the full dataset has ~16.5M) — at this
+size the top in-degree found is just 4, so 4.3b's "centrality" result reflects sampling noise, not
+the real citation network's actual hub patents. `LOAD CSV` + `MERGE` also doesn't scale much past
+low millions of rows; at the dataset's real size I'd switch to `neo4j-admin database import` (bulk
+offline load) and run on Neo4j Enterprise for clustering, since this is a single, unclustered
+Community Edition instance with no replication.
+
+## References
+- Neo4j, *Cypher Manual* (`LOAD CSV`, `MERGE`, `PROFILE`) — https://neo4j.com/docs/cypher-manual/current/
+- Neo4j, *neo4j-admin database import* — https://neo4j.com/docs/operations-manual/current/import/
+- Neo4j, *Docker documentation* — https://neo4j.com/docs/operations-manual/current/docker/
+- SNAP, *cit-Patents dataset* — https://snap.stanford.edu/data/cit-Patents.html

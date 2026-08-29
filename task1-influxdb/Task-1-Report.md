@@ -98,3 +98,17 @@ daily average, a live anomaly count, and the latest reading.
 **Fig 6**:
 
 ![Grafana Dashboard](figures/06_grafana_dashboard.png)
+
+## Limitations / what I'd do differently at scale
+This is a single-node OSS InfluxDB instance with one station's data — the tag/field schema is
+designed to scale to many stations, but was never actually tested with more than one series, and
+OSS InfluxDB v2 has no built-in horizontal scaling (that needs InfluxDB Enterprise/Cloud). The
+downsampling task's 30-day retention is verified against a continuously-refreshed live window,
+not against years of accumulated cold data being evicted/compacted under real long-term load.
+
+## References
+- InfluxData, *Flux language documentation* (`aggregateWindow`, Tasks, retention policies) — https://docs.influxdata.com/flux/v0/
+- InfluxData, *InfluxDB v2 documentation* (schema design: tags vs. fields) — https://docs.influxdata.com/influxdb/v2/
+- InfluxData, *influxdb-client-python* — https://influxdb-client.readthedocs.io/
+- Open-Meteo, *Historical Weather API* — https://open-meteo.com/en/docs/historical-weather-api
+- Grafana Labs, *Provisioning documentation* — https://grafana.com/docs/grafana/latest/administration/provisioning/
