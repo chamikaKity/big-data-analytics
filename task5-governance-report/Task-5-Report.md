@@ -123,15 +123,27 @@ machines, quantum principal component analysis, and quantum k-means — each of 
 reformulates a classically expensive kernel or eigen-decomposition step using quantum state
 amplitudes, offering, under specific data-encoding assumptions, exponential speedups over their
 classical counterparts for the linear-algebraic subroutine, though not necessarily for the full
-end-to-end pipeline once state preparation and measurement overheads are accounted for. For big
-data indexing specifically, the practical relevance of quantum k-means and quantum PCA is in
-building lower-dimensional, quantum-native representations that a quantum-enhanced database
-could use for approximate similarity search — the same problem classical vector indexes (e.g.
-HNSW, IVF) solve today, but with a fundamentally different scaling profile once fault-tolerant
-hardware exists at sufficient qubit counts.
+end-to-end pipeline once state preparation and measurement overheads are accounted for.
+
+Quantum-enhanced databases are a distinct paradigm from QML rather than merely a downstream
+application of it: where QML re-expresses a learning problem's linear algebra to exploit quantum
+state amplitudes, quantum-enhanced databases instead exploit Grover's algorithm, which gives a
+quadratic speedup for unstructured search — reducing a search over N items from O(N) classical
+queries to O(√N) quantum ones — directly targeting the search and indexing operations a database
+performs internally, independent of any learning task. Grover [10] originally framed this as
+searching an unsorted database for a single matching record, which is precisely database index
+lookup in its most primitive form, and Barbosa et al. [11] operationalize that speedup concretely:
+their QRLIT system replaces the epsilon-greedy exploration step of a reinforcement-learning-based
+index tuner with a Grover search over the space of candidate indexes, and shows on the TPC-H
+benchmark that it converges to a good index configuration faster than the classical
+reinforcement-learning baseline. This is a direct, working instance of "multidimensional indexing
+optimization" via quantum-enhanced search, distinct from the vector-similarity use of quantum
+k-means or quantum PCA described above, and, like the QML primitives, it remains bounded by
+today's limited qubit counts and error rates rather than being immediately deployable at
+production database scale.
 
 The disruption to cryptography is more immediate and better characterized than the disruption to
-indexing. Dam et al. [10] document that Shor's algorithm, once run on a sufficiently large
+indexing. Dam et al. [12] document that Shor's algorithm, once run on a sufficiently large
 fault-tolerant quantum computer, breaks the discrete-log and integer-factorization assumptions
 underlying RSA and elliptic-curve cryptography — the two families of asymmetric cryptographic
 signatures that essentially all current database and pipeline authentication depend on. Their survey
@@ -150,7 +162,7 @@ policies already assume.
 
 A second disruption is unfolding at the opposite end of determinism: embedding Large Language
 Models directly inside data engineering control loops. The clearest, most rigorously evaluated
-example is text-to-SQL synthesis. Pourreza and Rafiei [11] show, with DIN-SQL, that
+example is text-to-SQL synthesis. Pourreza and Rafiei [13] show, with DIN-SQL, that
 decomposing the text-to-SQL task into sub-problems — schema linking, query classification by
 difficulty, SQL generation, then a dedicated self-correction pass that re-prompts the model with
 any execution error the generated query produced — measurably improves execution accuracy
@@ -163,7 +175,7 @@ code-generation agents that write and iteratively repair ETL transformation code
 automated remediation before escalating to a human operator.
 
 A fourth variant, predictive pipeline optimization, closes the loop before a job even runs rather
-than after it fails. Theodorakopoulos, Karras and Krimpas [12] show that supervised models
+than after it fails. Theodorakopoulos, Karras and Krimpas [14] show that supervised models
 trained on a Spark cluster's historical execution metrics can forecast a new job's runtime and
 resource requirements with up to 98% accuracy, and use that forecast to drive hyperparameter
 tuning and real-time resource allocation, cutting processing time by roughly a quarter and
@@ -190,7 +202,7 @@ execution plans that produce identical output given identical input — because 
 what make distributed fault tolerance possible: if a task fails partway through, the engine can
 recompute exactly the same result from the last checkpoint. An LLM sitting inside that same
 pipeline, generating a transformation, a repair patch, or a SQL query on demand, offers no such
-guarantee: the same prompt can produce a different (if built on Pourreza and Rafiei's [11]
+guarantee: the same prompt can produce a different (if built on Pourreza and Rafiei's [13]
 self-correction pattern, hopefully converging, but not identically reproducing) output on a
 re-execution, which breaks the replay assumption Spark and Flink's recovery model depends on.
 The practical bottleneck this creates is not merely "the LLM might be wrong" — traditional code
@@ -243,11 +255,17 @@ Protection Laws', *IET Information Security*, 2025, Article 5536763.
 [9] Chen, L. et al. (2024) 'Design and analysis of quantum machine learning: a
 survey', *Connection Science*, 36(1), 2312121.
 
-[10] Dam, D.-T., Tran, T.-H., Hoang, V.-P., Pham, C.-K. and Hoang, T.-T. (2023) 'A Survey of
+[10] Grover, L.K. (1996) 'A fast quantum mechanical algorithm for database search', *Proceedings
+of the Twenty-Eighth Annual ACM Symposium on Theory of Computing (STOC '96)*, pp.212-219.
+
+[11] Barbosa, D., Gruenwald, L., D'Orazio, L. and Bernardino, J. (2024) 'QRLIT: Quantum
+Reinforcement Learning for Database Index Tuning', *Future Internet*, 16(12), Article 439.
+
+[12] Dam, D.-T., Tran, T.-H., Hoang, V.-P., Pham, C.-K. and Hoang, T.-T. (2023) 'A Survey of
 Post-Quantum Cryptography: Start of a New Race', *Cryptography*, 7(3), 40.
 
-[11] Pourreza, M. and Rafiei, D. (2023) 'DIN-SQL: Decomposed In-Context Learning of Text-to-SQL
+[13] Pourreza, M. and Rafiei, D. (2023) 'DIN-SQL: Decomposed In-Context Learning of Text-to-SQL
 with Self-Correction', *Advances in Neural Information Processing Systems*, 36.
 
-[12] Theodorakopoulos, L., Karras, A. and Krimpas, G.A. (2025) 'Optimizing Apache Spark MLlib:
+[14] Theodorakopoulos, L., Karras, A. and Krimpas, G.A. (2025) 'Optimizing Apache Spark MLlib:
 Predictive Performance of Large-Scale Models for Big Data Analytics', *Algorithms*, 18(2), 74.
