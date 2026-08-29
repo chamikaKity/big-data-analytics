@@ -28,3 +28,10 @@ nodes.
 - (c) shortest path between patents `1884442` and `3858801` — not directly connected; true
   shortest path is 3 hops via two intermediate patents (found with `shortestPath`, undirected
   `CITES*` since the sample has no multi-hop *directed* chains at this size)
+
+**4.4 — done.** `PROFILE`-ed the neighbor and shortest-path queries (`scripts/profile_output.log`):
+both hit `NodeUniqueIndexSeek` on the `Patent.id` constraint, then traverse via native
+pointer-chasing (`OptionalExpand`/`ShortestPath`) rather than a scan — 35 and 20 total DB hits
+respectively. Report contrasts this with the cost of an equivalent multi-hop `JOIN` over normalized
+SQL tables, and notes the in-degree query (4.3b) is the exception: as a whole-graph aggregate it
+still needs a full `NodeByLabelScan`, same as a SQL `GROUP BY` would.

@@ -53,3 +53,32 @@ at this size) finds a true shortest path of 3 hops, via intermediate patents `38
 **Fig 4**:
 
 ![Shortest path between patents 1884442 and 3858801](figures/task4_3c_combined.png)
+
+## 4.4 — Index Seeks vs. SQL Multi-Join Cost
+The stated point of using a graph database is running "performance-driven node lookups without
+incurring standard SQL multi-join computational penalties." `PROFILE`-ing the neighbor and
+shortest-path queries (full plans in `scripts/profile_output.log`) confirms this directly:
+
+- **Neighbor lookup (4.3a)**: the plan opens with `NodeUniqueIndexSeek` on the `Patent.id`
+  constraint (2 DB hits to locate the node), then two `OptionalExpand` operators walk the `CITES`
+  relationships directly off that node — 35 total database accesses for the whole query.
+- **Shortest path (4.3c)**: both endpoint patents are located via `NodeUniqueIndexSeek` (2 hits
+  each), then the native `ShortestPath` operator expands outward from both ends — just 20 total
+  database accesses to resolve a 3-hop path across the graph.
+
+Neither plan touches an index or a table for anything beyond the two starting node lookups; every
+hop after that is pointer-chasing along a relationship physically stored on the node record
+("index-free adjacency"), so cost scales with the number of hops actually taken, not with the size
+of the graph. An equivalent relational schema (`patents(id)`, `citations(source_id, target_id)`)
+would resolve the same shortest-path query as three chained self-joins of the `citations` table (or
+a recursive CTE unrolling to the same joins) — each hop re-scanning or re-hash-joining the full
+edge table against the previous hop's result set, with cost that grows both with hop count and with
+table size. That is the multi-join penalty a graph traversal avoids.
+
+This advantage is specific to targeted point-lookups and multi-hop traversals, not whole-graph
+aggregates: the in-degree query (4.3b) necessarily opens with a `NodeByLabelScan` over all 5,912
+`Patent` nodes, because computing in-degree for every patent means visiting every `CITES`
+relationship at least once — exactly the same full-table cost a SQL `GROUP BY` over the entire
+`citations` table would incur. The graph model wins specifically where the query starts from a
+known node and traverses a bounded number of hops, which is the case 4.3a and 4.3c demonstrate
+and 4.3b, by its aggregate nature, does not.
