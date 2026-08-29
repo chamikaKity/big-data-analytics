@@ -92,6 +92,12 @@ Total application wall time: **12.5s** (start 02:51:16.008 → end 02:51:28.521 
 the broadcast-join `count`, and the final `csv` write):
 ![Jobs Timeline](figures/02_jobs_timeline.png)
 
+Most of the 13 jobs are trivial single-stage `count()` calls with no shuffle, so not worth a
+screenshot. **Job 2 was chosen for Figs 3-5** because it's the one with an actual shuffle boundary
+(3 total stages) — it's the `groupBy("dst")` → `orderBy(desc).limit(50)` computation, the core of
+3.2, so its DAG and stage metrics are the most representative evidence of what this job actually
+does.
+
 **Fig 3** — Details for Job 2 (the `orderBy(desc).limit(50)` top-50 computation): SUCCEEDED in
 3s, 2 completed stages + 1 skipped, with the executor-add event timeline:
 ![Job 2 Details](figures/03_job2_details.png)
