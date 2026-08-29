@@ -67,12 +67,30 @@ storage and processing (constraining who and what can access personal fields, an
 to deletion (propagating an erasure request through every downstream copy, cache, and derived
 table a record has touched). This last requirement is architecturally significant: it means the
 system must maintain a traceable record of where every piece of personal data has flowed, which
-is precisely the data lineage problem. CCPA imposes an analogous discipline — the right to know
-what data is held and the right to opt out of its sale — with the same practical consequence for
-architecture. In a centralized data lake, lineage can, in theory, be captured centrally since all data
-passes through one platform team's tooling; in a federated Data Mesh, each domain must
-independently guarantee it can trace and erase its own data, which raises the coordination burden
-Bode et al. [5] describe.
+is precisely the data lineage problem.
+
+CCPA imposes a structurally different discipline rather than a merely analogous one. Lim and Oh
+[8], comparing data protection regimes across the EU, the United States, China, Japan, and South
+Korea, characterize CCPA as opt-out by default: a business may process a Californian consumer's
+personal information without seeking prior consent, but must honor that consumer's specific
+rights to know what categories of information have been collected, to have it deleted, and,
+distinctively, to opt out of its sale or sharing to third parties — a right GDPR has no direct
+equivalent for, since GDPR's stricter opt-in consent requirement is meant to prevent the
+unauthorized sale from arising in the first place. This reverses the pipeline design implication
+Rhahla, Allegue and Abdellatif [7] describe for GDPR: where a GDPR-compliant ingestion path
+must gate data behind a prior lawful basis before it enters the pipeline at all, a CCPA-compliant
+pipeline must instead maintain a persistent, checked-at-every-egress suppression list of consumers
+who opted out, since processing itself was already permitted by default and it is specifically the
+downstream sale or third-party sharing step that must respect the opt-out. The two regimes'
+enforcement structures diverge just as sharply: GDPR fines scale with global annual revenue (up
+to 4% or €20 million, whichever is higher) and are levied by EU national supervisory authorities,
+whereas CCPA is enforced by the California Attorney General and the California Privacy
+Protection Agency through fixed statutory penalties per violation, a materially different
+compliance-risk calculus for a multinational pipeline that must satisfy both simultaneously. In a
+centralized data lake, both obligations can, in theory, be captured centrally since all data passes
+through one platform team's tooling; in a federated Data Mesh, each domain must independently
+guarantee it can enforce erasure, honor opt-outs, and trace its own data, which raises the
+coordination burden Bode et al. [5] describe.
 
 ### Metadata Catalogs & Lineage
 
@@ -100,7 +118,7 @@ super-polynomial as data volume scales — nearest-neighbor search over high-dim
 embeddings, optimal query plan selection over large joins, and clustering over large unlabeled
 datasets among them. Quantum Machine Learning (QML) targets a subset of these by re-expressing
 the underlying linear algebra in a Hilbert space where certain operations scale more favorably.
-Chen et al. [8] survey the leading QML primitives — quantum support vector
+Chen et al. [9] survey the leading QML primitives — quantum support vector
 machines, quantum principal component analysis, and quantum k-means — each of which
 reformulates a classically expensive kernel or eigen-decomposition step using quantum state
 amplitudes, offering, under specific data-encoding assumptions, exponential speedups over their
@@ -113,7 +131,7 @@ HNSW, IVF) solve today, but with a fundamentally different scaling profile once 
 hardware exists at sufficient qubit counts.
 
 The disruption to cryptography is more immediate and better characterized than the disruption to
-indexing. Dam et al. [9] document that Shor's algorithm, once run on a sufficiently large
+indexing. Dam et al. [10] document that Shor's algorithm, once run on a sufficiently large
 fault-tolerant quantum computer, breaks the discrete-log and integer-factorization assumptions
 underlying RSA and elliptic-curve cryptography — the two families of asymmetric cryptographic
 signatures that essentially all current database and pipeline authentication depend on. Their survey
@@ -132,7 +150,7 @@ policies already assume.
 
 A second disruption is unfolding at the opposite end of determinism: embedding Large Language
 Models directly inside data engineering control loops. The clearest, most rigorously evaluated
-example is text-to-SQL synthesis. Pourreza and Rafiei [10] show, with DIN-SQL, that
+example is text-to-SQL synthesis. Pourreza and Rafiei [11] show, with DIN-SQL, that
 decomposing the text-to-SQL task into sub-problems — schema linking, query classification by
 difficulty, SQL generation, then a dedicated self-correction pass that re-prompts the model with
 any execution error the generated query produced — measurably improves execution accuracy
@@ -145,7 +163,7 @@ code-generation agents that write and iteratively repair ETL transformation code
 automated remediation before escalating to a human operator.
 
 A fourth variant, predictive pipeline optimization, closes the loop before a job even runs rather
-than after it fails. Theodorakopoulos, Karras and Krimpas [11] show that supervised models
+than after it fails. Theodorakopoulos, Karras and Krimpas [12] show that supervised models
 trained on a Spark cluster's historical execution metrics can forecast a new job's runtime and
 resource requirements with up to 98% accuracy, and use that forecast to drive hyperparameter
 tuning and real-time resource allocation, cutting processing time by roughly a quarter and
@@ -172,7 +190,7 @@ execution plans that produce identical output given identical input — because 
 what make distributed fault tolerance possible: if a task fails partway through, the engine can
 recompute exactly the same result from the last checkpoint. An LLM sitting inside that same
 pipeline, generating a transformation, a repair patch, or a SQL query on demand, offers no such
-guarantee: the same prompt can produce a different (if built on Pourreza and Rafiei's [10]
+guarantee: the same prompt can produce a different (if built on Pourreza and Rafiei's [11]
 self-correction pattern, hopefully converging, but not identically reproducing) output on a
 re-execution, which breaks the replay assumption Spark and Flink's recovery model depends on.
 The practical bottleneck this creates is not merely "the LLM might be wrong" — traditional code
@@ -219,14 +237,17 @@ https://eur-lex.europa.eu/eli/reg/2016/679/oj (Accessed: 29 August 2026).
 [7] Rhahla, M., Allegue, S. and Abdellatif, T. (2021) 'Guidelines for GDPR compliance in Big Data
 systems', *Journal of Information Security and Applications*, 61, 102896.
 
-[8] Chen, L. et al. (2024) 'Design and analysis of quantum machine learning: a
+[8] Lim, S. and Oh, J. (2025) 'Navigating Privacy: A Global Comparative Analysis of Data
+Protection Laws', *IET Information Security*, 2025, Article 5536763.
+
+[9] Chen, L. et al. (2024) 'Design and analysis of quantum machine learning: a
 survey', *Connection Science*, 36(1), 2312121.
 
-[9] Dam, D.-T., Tran, T.-H., Hoang, V.-P., Pham, C.-K. and Hoang, T.-T. (2023) 'A Survey of
+[10] Dam, D.-T., Tran, T.-H., Hoang, V.-P., Pham, C.-K. and Hoang, T.-T. (2023) 'A Survey of
 Post-Quantum Cryptography: Start of a New Race', *Cryptography*, 7(3), 40.
 
-[10] Pourreza, M. and Rafiei, D. (2023) 'DIN-SQL: Decomposed In-Context Learning of Text-to-SQL
+[11] Pourreza, M. and Rafiei, D. (2023) 'DIN-SQL: Decomposed In-Context Learning of Text-to-SQL
 with Self-Correction', *Advances in Neural Information Processing Systems*, 36.
 
-[11] Theodorakopoulos, L., Karras, A. and Krimpas, G.A. (2025) 'Optimizing Apache Spark MLlib:
+[12] Theodorakopoulos, L., Karras, A. and Krimpas, G.A. (2025) 'Optimizing Apache Spark MLlib:
 Predictive Performance of Large-Scale Models for Big Data Analytics', *Algorithms*, 18(2), 74.
