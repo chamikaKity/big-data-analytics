@@ -264,7 +264,7 @@ and Information Technology*, 5(4), pp.16-22.
 *Journal of Intelligent Information Systems*, 56, pp.97-120.
 
 [3] Harby, A.A. and Zulkernine, F. (2024) 'Data Lakehouse: A survey and experimental study',
-*Information Systems*, 127, 102460.
+*Information Systems*, 127, Article 102460.
 
 [4] Goedegebuure, A., Kumara, I., Driessen, S., van den Heuvel, W.-J., Monsieur, G., Tamburri,
 D.A. and Di Nucci, D. (2025) 'Data Mesh: A Systematic Gray Literature Review', *ACM Computing
@@ -280,13 +280,13 @@ Regulation)*, Official Journal of the European Union, L119. Available at:
 https://eur-lex.europa.eu/eli/reg/2016/679/oj (Accessed: 29 August 2026).
 
 [7] Rhahla, M., Allegue, S. and Abdellatif, T. (2021) 'Guidelines for GDPR compliance in Big Data
-systems', *Journal of Information Security and Applications*, 61, 102896.
+systems', *Journal of Information Security and Applications*, 61, Article 102896.
 
 [8] Lim, S. and Oh, J. (2025) 'Navigating Privacy: A Global Comparative Analysis of Data
 Protection Laws', *IET Information Security*, 2025, Article 5536763.
 
 [9] Chen, L. et al. (2024) 'Design and analysis of quantum machine learning: a
-survey', *Connection Science*, 36(1), 2312121.
+survey', *Connection Science*, 36(1), Article 2312121.
 
 [10] Grover, L.K. (1996) 'A fast quantum mechanical algorithm for database search', *Proceedings
 of the Twenty-Eighth Annual ACM Symposium on Theory of Computing (STOC '96)*, pp.212-219.
@@ -295,7 +295,7 @@ of the Twenty-Eighth Annual ACM Symposium on Theory of Computing (STOC '96)*, pp
 Reinforcement Learning for Database Index Tuning', *Future Internet*, 16(12), Article 439.
 
 [12] Dam, D.-T., Tran, T.-H., Hoang, V.-P., Pham, C.-K. and Hoang, T.-T. (2023) 'A Survey of
-Post-Quantum Cryptography: Start of a New Race', *Cryptography*, 7(3), 40.
+Post-Quantum Cryptography: Start of a New Race', *Cryptography*, 7(3), Article 40.
 
 [13] Pourreza, M. and Rafiei, D. (2023) 'DIN-SQL: Decomposed In-Context Learning of Text-to-SQL
 with Self-Correction', *Advances in Neural Information Processing Systems*, 36.
