@@ -24,6 +24,11 @@ data/
 # "most recent 5000 rows", so the actual file is committed for reproducibility.
 !task2-kafka-flink/data/
 !task2-kafka-flink/data/camera_traffic_counts.csv
+# Exception: Task 3's top-50 in-degree result is a tiny derived output (not
+# the raw dataset), committed as evidence for the report.
+!task3-spark/output/
+!task3-spark/output/top50_indegree/
+!task3-spark/output/top50_indegree/top50_indegree.csv
 
 # Docker / infra volumes
 **/influxdb-data/
