@@ -84,9 +84,16 @@ run history.
 
 **Master UI shows `Alive Workers: 0` after the stack has been up for a long time (hours/overnight),
 even though `docker compose ps` shows all containers still `Up`.** Real, repeatable issue on this
-setup — the worker→master TCP connection silently drops after the host machine sleeps or the
-Docker network hiccups, and the worker JVM doesn't reconnect on its own (container keeps running,
-just disconnected). Fix:
+setup, confirmed from `spark-master` logs (`docker logs spark-master --tail 50`): the workers are
+actually still alive and heartbeating on schedule the whole time, but the master has silently
+forgotten their registration (likely after a host sleep or Docker network hiccup), so every
+heartbeat gets logged and dropped:
+```
+WARN Master: Got heartbeat from unregistered worker worker-... This worker was never registered, so ignoring the heartbeat.
+```
+This repeats forever — Spark's `Worker` process has **no logic to re-register itself** after a
+rejected heartbeat, so waiting longer never fixes it on its own. The container has to be
+restarted to force a real disassociate + reconnect handshake the master will accept:
 ```bash
 docker compose restart spark-worker-1 spark-worker-2
 ```
